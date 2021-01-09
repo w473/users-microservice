@@ -1,17 +1,21 @@
 const express = require('express');
-// const { check, body } = require('express-validator/check');
-
+const authorization = require('../services/authorizationService');
+const validator = require('../services/validationService');
 const usersController = require('../controllers/usersController');
-// const User = require('../models/user');
 
 const router = express.Router();
 
-router.get('', usersController.get);
+router.get('', authorization.isUser(), usersController.get);
 
-router.post('', usersController.add);
+router.post('', authorization.isUser(), validator.validate('addUserSchema'), usersController.add);
 
-router.patch('', usersController.edit);
+router.post('/fetchByEmail/:email', authorization.hasRole(['SYS', 'ADMIN']), usersController.fetchByEmail);
+router.post('/fetchByEmail/:email/:validate', authorization.hasRole(['ADMIN']), usersController.fetchByEmail);
 
-router.delete('', usersController.remove);
+router.patch('', authorization.isUser(), validator.validate('editUserSchema'), usersController.edit);
+router.patch(':usersId', authorization.hasRole('ADMIN'), validator.validate('editUserSchema'), usersController.edit);
+
+router.delete('', authorization.isUser(), usersController.remove);
+router.delete(':usersId', authorization.hasRole('ADMIN'), usersController.remove);
 
 module.exports = router;
