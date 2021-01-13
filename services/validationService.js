@@ -1,5 +1,5 @@
 const { Validator, ValidationError } = require('express-json-validator-middleware');
-const validator = new Validator({ allErrors: true });
+const addFormats = require("ajv-formats");
 
 const schemas = {
     addUserSchema: {
@@ -29,7 +29,6 @@ const schemas = {
                         type: 'string'
                     }
                 }
-
             }
         }
     },
@@ -65,6 +64,14 @@ const schemas = {
     }
 };
 
-exports.validate = (schemaName) => {
-    return validator.validate({ body: schemas[schemaName] });
+
+const validator = new Validator({ allErrors: true, schemas: schemas });
+addFormats(validator.ajv);
+
+/**
+ * 
+ * @param {String} schemaName 
+ */
+module.exports = (schemaName) => {
+    return validator.validate({ body: schemaName });
 }

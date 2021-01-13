@@ -1,11 +1,9 @@
+const config = require('../config');
 const jwksClient = require('jwks-rsa');
 const jwt = require('jsonwebtoken');
 const client = jwksClient({
-    strictSsl: false, // Default value
-    jwksUri: 'http://localhost:5000/.well-known/jwks.json'
-    // requestHeaders: {}, // Optional
-    // requestAgentOptions: {}, // Optional
-    // timeout: 30000, // Defaults to 30s
+    strictSsl: config.auth.jwks.ssl,
+    jwksUri: config.auth.jwks.uri
 });
 
 function getKey(header, callback) {
@@ -16,23 +14,27 @@ function getKey(header, callback) {
     });
 }
 
-exports.entry = (req, res, next) => {
+exports.jwtVerifyMiddleware = (req, res, next) => {
     const authorizationHeader = req.header('Authorization');
     if (authorizationHeader) {
         const token = req.header('Authorization').replace('Bearer ', '');
         if (token.length > 0) {
             try {
-                return jwt.verify(token, getKey, { algorithm: 'RS512' }, (err, token) => {
-                    if (err) {
-                        return next(err);
+                return jwt.verify(
+                    token,
+                    getKey,
+                    { algorithm: config.auth.jwt.algorithm },
+                    (err, token) => {
+                        if (err) {
+                            return next(err);
+                        }
+                        req.user = token;
+                        next();
                     }
-                    req.user = token;
-                    next();
-                });
-            } catch (next) {
+                );
+            } catch (error) {
                 next(error);
             }
-
         }
     }
     return res.status(403).json(
@@ -51,6 +53,14 @@ exports.hasRole = (role) => {
         }
         next();
     }
+}
+
+exports.isAdmin = () => {
+    return this.hasRole('ADMIN');
+}
+
+exports.isSystem = () => {
+    return this.hasRole('SYS');
 }
 
 exports.isUser = () => {

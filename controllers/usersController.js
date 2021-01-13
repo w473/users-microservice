@@ -1,10 +1,11 @@
 const bcrypt = require('bcryptjs');
 const User = require('../models/userModel');
 const MUUID = require('uuid-mongodb');
+const userFormatter = require('../formatters/userFormatter');
 
 exports.add = (req, res, next) => {
-    //TO DO json schema validation
-    bcrypt.hash(req.body.password, 12)
+    bcrypt
+        .hash(req.body.password, 12)
         .then(password => {
             const user = new User({
                 "longName": req.body.longName,
@@ -37,27 +38,35 @@ exports.edit = async (req, res, next) => {
     if (req.body.password.length > 0) {
         req.body.password = await bcrypt.hash(req.body.password, 12);
     }
-    User.findById(MUUID.from(req.user.id)).exec()
+    User
+        .findById(MUUID.from(req.user.id))
+        .exec()
         .then(user => {
             if (!user) {
                 return res.status(400).json({ message: `User does not exists` });
             }
 
             for (const [key, value] of Object.entries(req.body)) {
-                if (key === 'password') {
-                    user.credentials.password = value;
-                    user.credentials.activationCode = MUUID.v4().toString();
-                } else {
-                    user[key] = value;
+                switch (key) {
+                    case 'password':
+                        user.credentials.password = value;
+                        user.credentials.activationCode = MUUID.v4().toString();
+                        break;
+                    case 'email':
+                    // code block
+                    default:
+                        user[key] = value;
                 }
             }
             return user.save();
         })
         .then(result => {
-
-            //wyslij MAILA jak new password!!
+            console.log(result);
+            //moze da sie zobaczyc na result co zmieniono?
+            //wyslij MAILA jak new email!!
             return res.status(204).send();
-        }).catch(err => {
+        })
+        .catch(err => {
             if (err.code = 11000) {
                 return res.status(400).json(
                     { message: `${Object.keys(err.keyPattern)[0]} is duplicated` }
@@ -77,24 +86,20 @@ exports.get = (req, res, next) => {
         usersId = req.params.usersId;
     }
     console.log(usersId);
-    User.findById(MUUID.from(usersId)).exec()
+    User
+        .findById(MUUID.from(usersId))
+        .exec()
         .then(user => {
-            console.log(user);
             if (!user) {
                 return res.status(400).json({ message: `User does not exists` });
             }
 
-            const userResponse = {
-                'roles': user.roles,
-                'isActive': user.isActive,
-                'textId': user.textId,
-                'name': user.name,
-                'locale': user.locale,
-                'email': user.email
-            };
-            return res.status(200).json({ message: `User data found`, payload: userResponse });
+            return res.status(200).json(
+                { message: `User data found`, payload: userFormatter.formatOne(user) }
+            );
 
-        }).catch(err => next(err));
+        })
+        .catch(err => next(err));
 }
 
 exports.remove = (req, res, next) => {
@@ -107,24 +112,14 @@ exports.remove = (req, res, next) => {
 }
 
 exports.fetchByEmail = async (req, res, next) => {
-    //TO DO json schema validation
-    console.log('user', req.user);
-    console.log(req.body)
-    User.findOne({ 'email': req.params.email }).exec()
+    User
+        .findOne({ 'email': req.params.email })
+        .exec()
         .then(user => {
             if (!user) {
                 return res.status(400).json({ message: `User does not exists` });
             }
-            //TODO formatter
-            const userResponse = {
-                'id': MUUID.from(user._id).toString(),
-                'roles': user.roles,
-                'isActive': user.isActive,
-                'username': user.username,
-                'longName': user.longName,
-                'locale': user.locale,
-                'email': user.email
-            };
+            const userResponse = userFormatter.formatOne(user);
             if (req.params.validate) {
                 if (req.body.password) {
                     if (bcrypt.compareSync(req.body.password, user.credentials.password)) {

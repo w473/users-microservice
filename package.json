@@ -1,20 +1,26 @@
 {
-  "name": "trakayo-users",
+  "name": "users-microservice",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/w473/users-microservice.git"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "mocha ./tests/unit",
+    "test-integration": "ENV=test mocha ./tests/integration",
     "start-dev": "nodemon index.js",
     "start": "node index.js"
   },
   "author": "Jacek Głogosz",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "bson": "^4.2.2",
     "express": "^4.17.1",
-    "express-json-validator-middleware": "^2.1.1",
+    "express-json-validator-middleware": "git+https://github.com/w473/express-json-validator-middleware.git",
+    "ajv-formats": "^1.5.1",
     "jsonwebtoken": "^8.5.1",
     "jwks-rsa": "^1.12.1",
     "mongoose": "^5.11.9",
@@ -22,6 +28,10 @@
     "uuidv4": "^6.2.6"
   },
   "devDependencies": {
-    "nodemon": "^2.0.6"
+    "chai": "^4.2.0",
+    "mocha": "^8.2.1",
+    "node-mocks-http": "^1.10.0",
+    "nodemon": "^2.0.6",
+    "sinon": "^9.2.3"
   }
 }
