@@ -21,19 +21,21 @@ app.use((req, res, next) => {
 
 app.use(routes);
 
-app.use((req, res, next) => {
-    console.log(res)
-    next();
+app.use((req, res) => {
+    res.status(404).json({ message: 'Page you are looking for does not exist' });
+});
+
+app.use((error, req, res,) => {
+    console.log(error);
+    res.status(500).json({ message: 'Unexpected error occured' });
 });
 
 mongoose
     .connect(
         config.db.url,
         { useNewUrlParser: true }
-
     )
     .then(result => {
-        result.connection.useDb(config.db.name);
         app.listen(config.port);
     })
     .catch(err => {

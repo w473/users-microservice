@@ -1,10 +1,11 @@
 const bcrypt = require('bcryptjs');
 const User = require('../models/userModel');
 const MUUID = require('uuid-mongodb');
-const userFormatter = require('../formatters/userFormatter');
+const usersFormatter = require('../formatters/usersFormatter');
+const emailService = require('../services/emailService');
 
 exports.add = (req, res, next) => {
-    bcrypt
+    return bcrypt
         .hash(req.body.password, 12)
         .then(password => {
             const user = new User({
@@ -19,15 +20,14 @@ exports.add = (req, res, next) => {
             });
             return user.save();
         })
-        .then(result => {
+        .then(user => {
             res.status(200).json({ message: 'New user added successfuly' });
-            //TO DO email send
-            //console.log(result.email);
+            return emailService.sendNewUser(user);
         })
         .catch(err => {
             if (err.code = 11000) {
                 return res.status(400).json(
-                    { message: `${Object.keys(err.keyPattern)[0]} is duplicated` }
+                    { message: `Field "${Object.keys(err.keyPattern)[0]}" is not unique` }
                 );
             }
             next(err);
@@ -35,45 +35,44 @@ exports.add = (req, res, next) => {
 }
 
 exports.edit = async (req, res, next) => {
-    if (req.body.password.length > 0) {
-        req.body.password = await bcrypt.hash(req.body.password, 12);
-    }
-    User
-        .findById(MUUID.from(req.user.id))
-        .exec()
-        .then(user => {
-            if (!user) {
-                return res.status(400).json({ message: `User does not exists` });
-            }
+    try {
+        const user = await User.findById(MUUID.from(req.user.id));
+        if (!user) {
+            return res.status(404).json({ message: `User does not exists` });
+        }
+        if (req.body.password && req.body.password.length > 0) {
+            req.body.password = await bcrypt.hash(req.body.password, 12);
+        }
+        let newEmail = false;
 
-            for (const [key, value] of Object.entries(req.body)) {
-                switch (key) {
-                    case 'password':
-                        user.credentials.password = value;
+        for (const [key, value] of Object.entries(req.body)) {
+            switch (key) {
+                case 'email':
+                    newEmail = value != user.email;
+                    if (newEmail) {
+                        user.isActive = false;
                         user.credentials.activationCode = MUUID.v4().toString();
-                        break;
-                    case 'email':
-                    // code block
-                    default:
-                        user[key] = value;
-                }
+                    }
+                default:
+                    user[key] = value;
             }
-            return user.save();
-        })
-        .then(result => {
-            console.log(result);
-            //moze da sie zobaczyc na result co zmieniono?
-            //wyslij MAILA jak new email!!
-            return res.status(204).send();
-        })
-        .catch(err => {
-            if (err.code = 11000) {
-                return res.status(400).json(
-                    { message: `${Object.keys(err.keyPattern)[0]} is duplicated` }
-                );
-            }
-            next(err);
-        });
+        }
+        await user.save();
+
+        if (newEmail) {
+            res.status(200).json({ message: 'Account needs to activated after email change' });
+            emailService.sendNewEmail(user);
+        } else {
+            res.status(204).send();
+        }
+    } catch (err) {
+        if (err.code = 11000) {
+            return res.status(400).json(
+                { message: `Field "${Object.keys(err.keyPattern)[0]}" is not unique` }
+            );
+        }
+        next(err);
+    }
 }
 
 exports.get = (req, res, next) => {
@@ -85,53 +84,97 @@ exports.get = (req, res, next) => {
         }
         usersId = req.params.usersId;
     }
-    console.log(usersId);
-    User
+    return User
         .findById(MUUID.from(usersId))
         .exec()
         .then(user => {
             if (!user) {
-                return res.status(400).json({ message: `User does not exists` });
+                return res.status(404).json({ message: `User does not exists` });
             }
-
             return res.status(200).json(
-                { message: `User data found`, payload: userFormatter.formatOne(user) }
+                { message: `User data found`, data: usersFormatter.formatOne(user) }
             );
+        })
+        .catch(err => console.log(err));
+}
 
+exports.delete = (req, res, next) => {
+    let usersId = req.user.id;
+    if (req.params.usersId && req.user.id != req.params.usersId) {
+        if (req.user.roles.indexOf('ADMIN') === -1) {
+            return res.status(403).json({ message: `Not Allowed` });
+        }
+        usersId = req.params.usersId;
+    }
+
+    return User
+        .deleteOne({ '_id': MUUID.from(usersId) })
+        .exec()
+        .then(result => {
+            if (result.deletedCount === 1) {
+                return res.status(200).json({ message: `User deleted` });
+            }
+            return res.status(404).json({ message: `User has not been found` });
         })
         .catch(err => next(err));
 }
 
-exports.remove = (req, res, next) => {
-    //TODO
-    /**
-     * sessia i odczyt danych usera z sessji
-     */
-    let usersId = req.params.usersId;
-    throw new Error('Not implemented');
+exports.activate = (req, res, next) => {
+    return User
+        .findOne({ 'credentials.activationCode': req.params.activationCode })
+        .exec()
+        .then(user => {
+            if (user) {
+                user.credentials.activationCode = undefined;
+                user.isActive = true;
+                return user.save();
+            }
+        })
+        .then(result => {
+            if (result) {
+                return res.status(200).json({ message: `User has been activated` });
+            }
+            return res.status(404).json({ message: `User has not been found` });
+        })
+        .catch(err => next(err));
 }
 
-exports.fetchByEmail = async (req, res, next) => {
-    User
-        .findOne({ 'email': req.params.email })
+exports.find = async (req, res, next) => {
+    const where = {};
+    return User
+        .find(where)
+        .exec()
+        .then(users => {
+            return res.status(200).json({ message: `Users found`, data: usersFormatter.formatAll(users, true) });
+        })
+        .catch(err => next(err));
+}
+
+exports.findByEmail = async (req, res, next) => {
+    return User
+        .findOne({ 'email': req.body.email })
         .exec()
         .then(user => {
             if (!user) {
-                return res.status(400).json({ message: `User does not exists` });
+                return res.status(404).json({ message: `User does not exists` });
             }
-            const userResponse = userFormatter.formatOne(user);
-            if (req.params.validate) {
-                if (req.body.password) {
-                    if (bcrypt.compareSync(req.body.password, user.credentials.password)) {
-                        return res.status(200).json({ message: `User data found`, payload: userResponse });
-                    }
-                    return res.status(400).json({ message: `User does not exists` });
-                } else {
-                    return res.status(404).json({ message: `Wrong Execution` });
-                }
-            }
-            return res.status(200).json({ message: `User data found`, payload: userResponse });
+            return res.status(200).json({ message: `User data found`, data: usersFormatter.formatOne(user) });
+        })
+        .catch(err => next(err));
+}
 
+exports.findByEmailPassword = async (req, res, next) => {
+    return User
+        .findOne({ 'email': req.body.email })
+        .exec()
+        .then(user => {
+            if (!user) {
+                return res.status(404).json({ message: `User does not exists` });
+            }
+            if (bcrypt.compareSync(req.body.password, user.credentials.password)) {
+                return res.status(200).json({ message: `User data found`, data: usersFormatter.formatOne(user) });
+            }
+            return res.status(400).json({ message: `User does not exists` });
         })
         .catch(err => next(err));
 }

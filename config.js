@@ -11,8 +11,10 @@ const config = {
     },
     emailService: 'http://127.0.0.1:3000',
     db: {
-        url: 'mongodb://user:pass@localhost/users?retryWrites=true&authSource=admin',
-        name: (process.env.ENV == 'test') ? 'test' : 'users'
+        url: (process.env.ENV == 'test')
+            ? 'mongodb://user:pass@localhost/test?retryWrites=true&authSource=admin'
+            : 'mongodb://user:pass@localhost/users?retryWrites=true&authSource=admin'
     }
 };
+
 module.exports = config;

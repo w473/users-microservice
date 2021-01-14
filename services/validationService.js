@@ -8,10 +8,14 @@ const schemas = {
         additionalProperties: false,
         properties: {
             longName: {
-                type: 'string'
+                type: 'string',
+                minLength: 5,
+                maxLength: 256
             },
             username: {
-                type: 'string'
+                type: 'string',
+                minLength: 5,
+                maxLength: 256
             },
             locale: {
                 type: 'string',
@@ -26,7 +30,9 @@ const schemas = {
                 required: ['password'],
                 properties: {
                     password: {
-                        type: 'string'
+                        type: 'string',
+                        minLength: 8,
+                        maxLength: 256
                     }
                 }
             }
@@ -38,10 +44,14 @@ const schemas = {
         minProperties: 1,
         properties: {
             longName: {
-                type: 'string'
+                type: 'string',
+                minLength: 5,
+                maxLength: 256
             },
             username: {
-                type: 'string'
+                type: 'string',
+                minLength: 5,
+                maxLength: 256
             },
             locale: {
                 type: 'string',
@@ -55,13 +65,42 @@ const schemas = {
                 type: 'object',
                 properties: {
                     password: {
-                        type: 'string'
+                        type: 'string',
+                        minLength: 8,
+                        maxLength: 256
                     }
                 }
 
             }
         }
-    }
+    },
+    emailAndPassword: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['password', 'email'],
+        properties: {
+            email: {
+                type: 'string',
+                format: 'email'
+            },
+            password: {
+                type: 'string',
+                minLength: 8,
+                maxLength: 256
+            }
+        }
+    },
+    email: {
+        type: 'object',
+        required: ['email'],
+        additionalProperties: false,
+        properties: {
+            email: {
+                type: 'string',
+                format: 'email'
+            }
+        }
+    },
 };
 
 

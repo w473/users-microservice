@@ -5,16 +5,15 @@ const user = require('../models/userModel');
  * @param {user} user 
  * @returns {Promise}
  */
-exports.sendNewUserEmail = (user) => {
+exports.sendNewUser = (user) => {
 
 }
-
 
 /**
  * 
  * @param {user} user 
  * @returns {Promise}
  */
-exports.sendNewPasswordEmail = (user) => {
+exports.sendNewEmail = (user) => {
 
 }
