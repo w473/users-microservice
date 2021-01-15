@@ -6,7 +6,7 @@ const emailService = require('../services/emailService');
 
 exports.add = (req, res, next) => {
     return bcrypt
-        .hash(req.body.password, 12)
+        .hash(req.body.credentials.password, 12)
         .then(password => {
             const user = new User({
                 "longName": req.body.longName,
@@ -25,7 +25,7 @@ exports.add = (req, res, next) => {
             return emailService.sendNewUser(user);
         })
         .catch(err => {
-            if (err.code = 11000) {
+            if (err.code === 11000) {
                 return res.status(400).json(
                     { message: `Field "${Object.keys(err.keyPattern)[0]}" is not unique` }
                 );
@@ -61,12 +61,11 @@ exports.edit = async (req, res, next) => {
 
         if (newEmail) {
             res.status(200).json({ message: 'Account needs to activated after email change' });
-            emailService.sendNewEmail(user);
-        } else {
-            res.status(204).send();
+            return emailService.sendNewEmail(user);
         }
+        res.status(204).send();
     } catch (err) {
-        if (err.code = 11000) {
+        if (err.code === 11000) {
             return res.status(400).json(
                 { message: `Field "${Object.keys(err.keyPattern)[0]}" is not unique` }
             );
@@ -95,7 +94,7 @@ exports.get = (req, res, next) => {
                 { message: `User data found`, data: usersFormatter.formatOne(user) }
             );
         })
-        .catch(err => console.log(err));
+        .catch(err => next(err));
 }
 
 exports.delete = (req, res, next) => {
@@ -117,6 +116,32 @@ exports.delete = (req, res, next) => {
             return res.status(404).json({ message: `User has not been found` });
         })
         .catch(err => next(err));
+}
+
+exports.setRoles = (req, res, next) => {
+    const usersId = req.params.usersId;
+    if (usersId == req.user.id || req.body.roles.lastIndexOf('SYS') !== -1) {
+        return res.status(403).json({ message: `Not Allowed` });
+    }
+    req.body.roles.push('USER');
+    const roles = [...new Set(req.body.roles)];
+
+    return User
+        .findById(MUUID.from(usersId))
+        .exec()
+        .then(user => {
+            if (user) {
+                user.roles = roles;
+                return user.save();
+            }
+        })
+        .then((user) => {
+            if (!user) {
+                return res.status(404).json({ message: `User does not exists` });
+            }
+            return res.status(204).send();
+        })
+        .catch(err => console.log(err));
 }
 
 exports.activate = (req, res, next) => {

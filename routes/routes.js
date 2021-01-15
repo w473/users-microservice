@@ -21,4 +21,6 @@ router.delete(':usersId', authorization.isUser(), usersController.delete);
 
 router.patch('/activate/:activationCode', usersController.activate);
 
+router.patch('/setRoles/:usersId', authorization.hasRole(['ADMIN']), usersController.setRoles);
+
 module.exports = router;
