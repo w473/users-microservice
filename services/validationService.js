@@ -111,6 +111,6 @@ addFormats(validator.ajv);
  * 
  * @param {String} schemaName 
  */
-module.exports = (schemaName) => {
+exports.validate = (schemaName) => {
     return validator.validate({ body: schemaName });
 }
