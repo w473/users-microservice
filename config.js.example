@@ -23,7 +23,8 @@ const config = {
             name: "NAME",
             email: "some@email.js",
         }
-    }
+    },
+    activationURL: 'http://something.local/{{activationCode}}'
 };
 if (process.env.ENV == 'test') {
     config.db = {

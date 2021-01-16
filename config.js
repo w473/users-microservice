@@ -19,7 +19,8 @@ const config = {
         url: (process.env.ENV == 'test')
             ? 'mongodb://user:pass@localhost/test?retryWrites=true&authSource=admin'
             : 'mongodb://user:pass@localhost/users?retryWrites=true&authSource=admin'
-    }
+    },
+    activationURL: 'http://something.local/{{activationCode}}'
 };
 
 module.exports = config;

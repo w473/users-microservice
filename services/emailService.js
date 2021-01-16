@@ -1,25 +1,33 @@
 const User = require('../models/userModel');
 const config = require('../config');
 const fetch = require('node-fetch');
-const { response } = require('express');
+
 
 /**
  * 
- * @param {user} user 
+ * @param {User} user 
+ * @returns {String}
+ */
+const getActivationURL = (user) => {
+    return config.activationURL.replace('{{activationCode}}', user.credentials.activationCode);
+}
+/**
+ * 
+ * @param {User} user 
  * @returns {Promise}
  */
 exports.sendNewUser = (user) => {
-    return sendEmail('New user', user, { urlConfirmation: 'https://wp.pl' });
+    return sendEmail('New user', user, { activationURL: getActivationURL(user) });
 
 }
 
 /**
  * 
- * @param {user} user 
+ * @param {User} user 
  * @returns {Promise}
  */
 exports.sendNewEmail = (user) => {
-    return sendEmail('User new email', user, { urlConfirmation: 'https://wp.pl' });
+    return sendEmail('User new email', user, { activationURL: getActivationURL(user) });
 }
 
 /**
