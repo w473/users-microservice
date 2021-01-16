@@ -141,7 +141,7 @@ exports.setRoles = (req, res, next) => {
             }
             return res.status(204).send();
         })
-        .catch(err => console.log(err));
+        .catch(err => next(err));
 }
 
 exports.activate = (req, res, next) => {
@@ -193,11 +193,9 @@ exports.findByEmailPassword = async (req, res, next) => {
         .findOne({ 'email': req.body.email })
         .exec()
         .then(user => {
-            console.log(req.body.password);
             if (!user) {
                 return res.status(404).json({ message: `User does not existaaaas` });
             }
-            console.log(req.body.password);
             if (bcrypt.compareSync(req.body.password, user.credentials.password)) {
                 return res.status(200).json({ message: `User data found`, data: usersFormatter.formatOne(user) });
             }
