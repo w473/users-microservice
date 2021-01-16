@@ -16,14 +16,15 @@
   "author": "Jacek Głogosz",
   "license": "Apache-2.0",
   "dependencies": {
+    "ajv-formats": "^1.5.1",
     "bcryptjs": "^2.4.3",
     "bson": "^4.2.2",
     "express": "^4.17.1",
     "express-json-validator-middleware": "git+https://github.com/w473/express-json-validator-middleware.git",
-    "ajv-formats": "^1.5.1",
     "jsonwebtoken": "^8.5.1",
     "jwks-rsa": "^1.12.1",
     "mongoose": "^5.11.9",
+    "node-fetch": "^2.6.1",
     "uuid-mongodb": "^2.4.1",
     "uuidv4": "^6.2.6"
   },

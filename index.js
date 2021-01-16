@@ -27,7 +27,7 @@ app.use((error, req, res, next) => {
     if (error instanceof ValidationError) {
         return res.status(400).json({ message: 'Validation error', data: error.validationErrors });
     }
-    console.log(error);
+    console.log('ERROR LOG', error);
     if (!res.headersSent) {
         res.status(500).json({ message: 'Unexpected error occured' });
     }

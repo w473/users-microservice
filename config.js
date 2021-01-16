@@ -1,9 +1,14 @@
 const config = {
+    sso: 'http://localhost:5000',
+    sysAuth: {
+        app: 'users',
+        key: 'users_password'
+    },
     port: 3001,
     auth: {
         jwks: {
             ssl: false,
-            uri: 'http://localhost:5000/.well-known/jwks.json'
+            uri: this.sso + '/.well-known/jwks.json'
         },
         jwt: {
             algorithm: 'RS512'
