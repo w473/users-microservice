@@ -19,6 +19,7 @@ const getToken = (req) => {
     if (authorizationHeader) {
         return req.header('Authorization').replace('Bearer ', '');
     }
+    return '';
 }
 
 exports.hasRole = (role) => {

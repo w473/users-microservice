@@ -4,6 +4,10 @@ const bodyParser = require('body-parser');
 const routes = require('./routes/routes');
 const config = require('./config');
 const { ValidationError } = require('express-json-validator-middleware');
+const morgan = require('morgan')
+const logger = require('./services/loggerService');
+
+app.use(morgan('combined', { stream: logger.stream }));
 
 app.use(bodyParser.json());
 
@@ -25,9 +29,10 @@ app.use((req, res) => {
 
 app.use((error, req, res, next) => {
     if (error instanceof ValidationError) {
+        logger.info(JSON.stringify(error));
         return res.status(400).json({ message: 'Validation error', data: error.validationErrors });
     }
-    console.log('ERROR LOG', error);
+    logger.error(JSON.stringify(error));
     if (!res.headersSent) {
         res.status(500).json({ message: 'Unexpected error occured' });
     }
@@ -42,5 +47,6 @@ mongoose
         app.listen(config.port);
     })
     .catch(err => {
+        logger.error(JSON.stringify(error));
         console.log("ERROR 1", err);
     });

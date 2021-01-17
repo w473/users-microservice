@@ -1,10 +1,17 @@
 const config = {
-    sso: 'http://localhost:5000',
+    env: 'dev',
+    port: 80,
+    logging: {
+        graylog: {
+            host: 'graylog',
+            port: 12201
+        }
+    },
+    sso: 'http://sso:5000',
     sysAuth: {
         app: 'users',
         key: 'users_password'
     },
-    port: 80,
     auth: {
         jwks: {
             ssl: false,
@@ -14,11 +21,11 @@ const config = {
             algorithm: 'RS512'
         }
     },
-    emailService: 'http://127.0.0.1:3000',
+    emailService: 'http://mailer',
     db: {
         url: (process.env.ENV == 'test')
             ? 'mongodb://user:pass@localhost/test?retryWrites=true&authSource=admin'
-            : 'mongodb://user:pass@localhost/users?retryWrites=true&authSource=admin'
+            : 'mongodb://user:pass@mongo/users?retryWrites=true&authSource=admin'
     },
     activationURL: 'http://something.local/{{activationCode}}'
 };
