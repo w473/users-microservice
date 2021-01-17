@@ -4,7 +4,7 @@ const config = {
         app: 'users',
         key: 'users_password'
     },
-    port: 3001,
+    port: 80,
     auth: {
         jwks: {
             ssl: false,

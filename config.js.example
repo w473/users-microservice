@@ -1,46 +1,26 @@
 const config = {
+    sso: 'http://localhost:5000',
+    sysAuth: {
+        app: 'users',
+        key: 'users_password'
+    },
+    port: 80,
     auth: {
         jwks: {
             ssl: false,
-            uri: 'http://localhost:5000/.well-known/jwks.json'
+            uri: this.sso + '/.well-known/jwks.json'
         },
         jwt: {
             algorithm: 'RS512'
         }
     },
-    other: {
-        fallbackLocale: 'en_US'
-    },
-    emailService: {
-        host: 'smtp.gmail.com',
-        port: 587,
-        secure: false, // true for 465, false for other ports
-        auth: {
-            user: 'user',
-            pass: 'pass'
-        },
-        from: {
-            name: "NAME",
-            email: "some@email.js",
-        }
+    emailService: 'http://127.0.0.1:3000',
+    db: {
+        url: (process.env.ENV == 'test')
+            ? 'mongodb://user:pass@localhost/test?retryWrites=true&authSource=admin'
+            : 'mongodb://user:pass@localhost/users?retryWrites=true&authSource=admin'
     },
     activationURL: 'http://something.local/{{activationCode}}'
 };
-if (process.env.ENV == 'test') {
-    config.db = {
-        host: 'localhost',
-        port: 3307,
-        name: 'mailer_test',
-        username: 'root',
-        password: 'password'
-    }
-} else {
-    config.db = {
-        host: 'localhost',
-        port: 3307,
-        name: 'mailer',
-        username: 'root',
-        password: 'password'
-    }
-}
+
 module.exports = config;
