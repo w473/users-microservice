@@ -1,17 +1,21 @@
 const config = require('../config');
 const jwksClient = require('jwks-rsa');
 const jwt = require('jsonwebtoken');
+const logger = require('../services/loggerService');
 const client = jwksClient({
     strictSsl: config.auth.jwks.ssl,
-    jwksUri: config.auth.jwks.uri
+    jwksUri: config.sso + config.auth.jwks.uri
 });
 
-function getKey(header, callback) {
-    client.getSigningKey(header.kid, function (err, key) {
-        if (key) {
-            callback(null, key.getPublicKey());
-        }
-    });
+function getKey(next) {
+    return (header, callback) => {
+        client.getSigningKey(header.kid, function (err, key) {
+            if (key) {
+                return callback(err, key.getPublicKey());
+            }
+            next(err);
+        });
+    }
 }
 
 const getToken = (req) => {
@@ -28,7 +32,7 @@ exports.hasRole = (role) => {
         if (token.length > 0) {
             jwt.verify(
                 token,
-                getKey,
+                getKey(next),
                 { algorithm: config.auth.jwt.algorithm },
                 (err, token) => {
                     if (err) {

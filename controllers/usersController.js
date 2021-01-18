@@ -194,7 +194,7 @@ exports.findByEmailPassword = async (req, res, next) => {
         .exec()
         .then(user => {
             if (!user) {
-                return res.status(404).json({ message: `User does not existaaaas` });
+                return res.status(404).json({ message: `User does not exist` });
             }
             if (bcrypt.compareSync(req.body.password, user.credentials.password)) {
                 return res.status(200).json({ message: `User data found`, data: usersFormatter.formatOne(user) });

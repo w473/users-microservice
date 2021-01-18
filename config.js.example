@@ -1,14 +1,21 @@
 const config = {
+    env: 'dev',
+    port: 80,
+    logging: {
+        graylog: {
+            host: 'graylog',
+            port: 12201
+        }
+    },
     sso: 'http://localhost:5000',
     sysAuth: {
         app: 'users',
         key: 'users_password'
     },
-    port: 80,
     auth: {
         jwks: {
             ssl: false,
-            uri: this.sso + '/.well-known/jwks.json'
+            uri: '/.well-known/jwks.json'
         },
         jwt: {
             algorithm: 'RS512'

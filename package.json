@@ -21,6 +21,7 @@
     "bson": "^4.2.2",
     "express": "^4.17.1",
     "express-json-validator-middleware": "git+https://github.com/w473/express-json-validator-middleware.git",
+    "json-stringify-safe": "^5.0.1",
     "jsonwebtoken": "^8.5.1",
     "jwks-rsa": "^1.12.1",
     "mongoose": "^5.11.9",

@@ -15,7 +15,7 @@ const config = {
     auth: {
         jwks: {
             ssl: false,
-            uri: this.sso + '/.well-known/jwks.json'
+            uri: '/.well-known/jwks.json'
         },
         jwt: {
             algorithm: 'RS512'
