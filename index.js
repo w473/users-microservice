@@ -32,7 +32,7 @@ app.use((req, res) => {
 
 app.use((error, req, res, next) => {
     if (error instanceof ValidationError) {
-        logger.info(JSON.stringify(error));
+        logger.info(stringify(error));
         return res.status(400).json({ message: 'Validation error', data: error.validationErrors });
     }
     logger.error(stringify(error));
