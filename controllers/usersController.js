@@ -21,7 +21,7 @@ exports.add = (req, res, next) => {
             return user.save();
         })
         .then(user => {
-            res.status(200).json({ message: 'New user added successfuly' });
+            res.status(204).send();
             return emailService.sendNewUser(user);
         })
         .catch(err => {
@@ -91,7 +91,7 @@ exports.get = (req, res, next) => {
                 return res.status(404).json({ message: `User does not exists` });
             }
             return res.status(200).json(
-                { message: `User data found`, data: usersFormatter.formatOne(user) }
+                usersFormatter.formatOne(user)
             );
         })
         .catch(err => next(err));
@@ -111,7 +111,7 @@ exports.delete = (req, res, next) => {
         .exec()
         .then(result => {
             if (result.deletedCount === 1) {
-                return res.status(200).json({ message: `User deleted` });
+                return res.status(204).send();
             }
             return res.status(404).json({ message: `User has not been found` });
         })
@@ -157,7 +157,7 @@ exports.activate = (req, res, next) => {
         })
         .then(result => {
             if (result) {
-                return res.status(200).json({ message: `User has been activated` });
+                return res.status(204).send();
             }
             return res.status(404).json({ message: `User has not been found` });
         })
@@ -170,7 +170,12 @@ exports.find = async (req, res, next) => {
         .find(where)
         .exec()
         .then(users => {
-            return res.status(200).json({ message: `Users found`, data: usersFormatter.formatAll(users, true) });
+            return res.status(200).json(
+                {
+                    users: usersFormatter.formatAll(users, true),
+                    total: 666
+                }
+            );
         })
         .catch(err => next(err));
 }
@@ -183,7 +188,7 @@ exports.findByEmail = async (req, res, next) => {
             if (!user) {
                 return res.status(404).json({ message: `User does not exists` });
             }
-            return res.status(200).json({ message: `User data found`, data: usersFormatter.formatOne(user) });
+            return res.status(200).json(usersFormatter.formatOne(user));
         })
         .catch(err => next(err));
 }
@@ -197,7 +202,7 @@ exports.findByEmailPassword = async (req, res, next) => {
                 return res.status(404).json({ message: `User does not exist` });
             }
             if (bcrypt.compareSync(req.body.password, user.credentials.password)) {
-                return res.status(200).json({ message: `User data found`, data: usersFormatter.formatOne(user) });
+                return res.status(200).json(usersFormatter.formatOne(user));
             }
             return res.status(400).json({ message: `User does not exists` });
         })
