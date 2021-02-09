@@ -1,522 +1,566 @@
 {
-    "openapi": "3.0.1",
-    "info": {
-        "version": "1.0.0",
-        "title": "Users",
-        "description": "User management API",
-        "license": {
-            "name": "Apache 2.0",
-            "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
-        }
-    },
-    "paths": {
-        "/activate/{activationCode}": {
-            "patch": {
-                "description": "Activates account",
-                "parameters": [
-                    {
-                        "name": "activationCode",
-                        "in": "path",
-                        "schema": {
-                            "type": "String"
-                        },
-                        "required": true,
-                        "description": "Activation code sent to email"
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "Roles set properly"
-                    },
-                    "default": {
-                        "description": "unexpected error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Message"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/find": {
-            "post": {
-                "description": "finds users by query",
-                "responses": {
-                    "200": {
-                        "description": "Expected response to a valid request",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Users"
-                                }
-                            }
-                        }
-                    },
-                    "default": {
-                        "description": "unexpected error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Message"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/findByEmail": {
-            "post": {
-                "description": "find user by email",
-                "parameters": [
-                    {
-                        "name": "email",
-                        "in": "body",
-                        "schema": {
-                            "type": "string",
-                            "format": "email"
-                        },
-                        "required": true,
-                        "description": "email to find user"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Expected response to a valid request",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/User"
-                                }
-                            }
-                        }
-                    },
-                    "default": {
-                        "description": "unexpected error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Message"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/findByEmailPassword": {
-            "post": {
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/EmailAndPassword"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Expected response to a valid request",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/User"
-                                }
-                            }
-                        }
-                    },
-                    "default": {
-                        "description": "unexpected error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Message"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/setRoles/{usersId}": {
-            "post": {
-                "description": "sets user roles",
-                "parameters": [
-                    {
-                        "name": "usersId",
-                        "in": "path",
-                        "schema": {
-                            "type": "String"
-                        },
-                        "required": true,
-                        "description": "ID of user"
-                    }
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/Roles"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "204": {
-                        "description": "Roles set properly"
-                    },
-                    "default": {
-                        "description": "unexpected error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Message"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/{usersId}": {
-            "patch": {
-                "description": "Edit user - API for admins",
-                "parameters": [
-                    {
-                        "name": "usersId",
-                        "in": "path",
-                        "schema": {
-                            "type": "String"
-                        },
-                        "required": true,
-                        "description": "ID of user"
-                    }
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/UserEdit"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Account needs to activated after email change",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Message"
-                                }
-                            }
-                        }
-                    },
-                    "204": {
-                        "description": "User edited properly"
-                    },
-                    "default": {
-                        "description": "unexpected error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Message"
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "Delete user - API for admins",
-                "parameters": [
-                    {
-                        "name": "usersId",
-                        "in": "path",
-                        "schema": {
-                            "type": "String"
-                        },
-                        "required": true,
-                        "description": "ID of user"
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "User deleted properly"
-                    },
-                    "default": {
-                        "description": "unexpected error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Message"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/": {
-            "post": {
-                "description": "Creates new user",
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/UserAdd"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "204": {
-                        "description": "User created properly"
-                    },
-                    "default": {
-                        "description": "unexpected error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Message"
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            "get": {
-                "description": "Returns user",
-                "responses": {
-                    "200": {
-                        "description": "User",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/User"
-                                }
-                            }
-                        }
-                    },
-                    "default": {
-                        "description": "unexpected error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Message"
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            "patch": {
-                "description": "Edit user",
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/UserEdit"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Account needs to activated after email change",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Message"
-                                }
-                            }
-                        }
-                    },
-                    "204": {
-                        "description": "User edited properly"
-                    },
-                    "default": {
-                        "description": "unexpected error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Message"
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "Delete user",
-                "responses": {
-                    "204": {
-                        "description": "User deleted properly"
-                    },
-                    "default": {
-                        "description": "unexpected error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Message"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    },
-    "components": {
-        "schemas": {
-            "EmailAndPassword": {
-                "required": [
-                    "email",
-                    "password"
-                ],
-                "properties": {
-                    "email": {
-                        "type": "string",
-                        "format": "email"
-                    },
-                    "password": {
-                        "type": "string",
-                        "minLength": 8,
-                        "maxLength": 256
-                    }
-                }
-            },
-            "Roles": {
-                "type": "array",
-                "items": {
-                    "type": "string"
-                }
-            },
-            "Users": {
-                "properties": {
-                    "users": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/User"
-                        }
-                    },
-                    "total": {
-                        "type": "integer"
-                    }
-                }
-            },
-            "User": {
-                "properties": {
-                    "id": {
-                        "type": "string",
-                        "format": "uuid"
-                    },
-                    "username": {
-                        "type": "string"
-                    },
-                    "longName": {
-                        "type": "string"
-                    },
-                    "isActive": {
-                        "type": "boolean"
-                    },
-                    "roles": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        }
-                    },
-                    "locale": {
-                        "type": "string"
-                    },
-                    "email": {
-                        "type": "string",
-                        "format": "email"
-                    }
-                }
-            },
-            "UserAdd": {
-                "required": [
-                    "longName",
-                    "username",
-                    "locale",
-                    "email"
-                ],
-                "properties": {
-                    "username": {
-                        "type": "string",
-                        "minLength": 5,
-                        "maxLength": 256
-                    },
-                    "longName": {
-                        "type": "string",
-                        "minLength": 5,
-                        "maxLength": 256
-                    },
-                    "locale": {
-                        "type": "string",
-                        "pattern": "^[a-z][a-z]_[A-Z][A-Z]$"
-                    },
-                    "email": {
-                        "type": "string",
-                        "format": "email"
-                    },
-                    "credentials": {
-                        "required": [
-                            "password"
-                        ],
-                        "properties": {
-                            "password": {
-                                "type": "string",
-                                "minLength": 8,
-                                "maxLength": 256
-                            }
-                        }
-                    }
-                }
-            },
-            "UserEdit": {
-                "properties": {
-                    "username": {
-                        "type": "string",
-                        "minLength": 5,
-                        "maxLength": 256
-                    },
-                    "longName": {
-                        "type": "string",
-                        "minLength": 5,
-                        "maxLength": 256
-                    },
-                    "locale": {
-                        "type": "string",
-                        "pattern": "^[a-z][a-z]_[A-Z][A-Z]$"
-                    },
-                    "email": {
-                        "type": "string",
-                        "format": "email"
-                    },
-                    "credentials": {
-                        "properties": {
-                            "password": {
-                                "type": "string",
-                                "minLength": 8,
-                                "maxLength": 256
-                            }
-                        }
-                    }
-                }
-            },
-            "Message": {
-                "properties": {
-                    "message": {
-                        "type": "string"
-                    }
-                }
-            }
-        }
+  "openapi": "3.0.1",
+  "info": {
+    "version": "1.0.0",
+    "title": "Users",
+    "description": "User management API",
+    "license": {
+      "name": "Apache 2.0",
+      "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
     }
+  },
+  "paths": {
+    "/activate/{activationCode}": {
+      "patch": {
+        "description": "Activates account",
+        "parameters": [
+          {
+            "name": "activationCode",
+            "in": "path",
+            "schema": {
+              "type": "String"
+            },
+            "required": true,
+            "description": "Activation code sent to email"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Roles set properly"
+          },
+          "default": {
+            "description": "unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/find": {
+      "post": {
+        "description": "finds users by query",
+        "responses": {
+          "200": {
+            "description": "Expected response to a valid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Users"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/findByEmail": {
+      "post": {
+        "description": "find user by email",
+        "parameters": [
+          {
+            "name": "email",
+            "in": "body",
+            "schema": {
+              "type": "string",
+              "format": "email"
+            },
+            "required": true,
+            "description": "email to find user"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Expected response to a valid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/findByEmailPassword": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailAndPassword"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Expected response to a valid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/setRoles/{usersId}": {
+      "post": {
+        "description": "sets user roles",
+        "parameters": [
+          {
+            "name": "usersId",
+            "in": "path",
+            "schema": {
+              "type": "String"
+            },
+            "required": true,
+            "description": "ID of user"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Roles"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Roles set properly"
+          },
+          "default": {
+            "description": "unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{usersId}": {
+      "patch": {
+        "description": "Edit user - API for admins",
+        "parameters": [
+          {
+            "name": "usersId",
+            "in": "path",
+            "schema": {
+              "type": "String"
+            },
+            "required": true,
+            "description": "ID of user"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserEdit"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Account needs to activated after email change",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "User edited properly"
+          },
+          "default": {
+            "description": "unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "description": "Delete user - API for admins",
+        "parameters": [
+          {
+            "name": "usersId",
+            "in": "path",
+            "schema": {
+              "type": "String"
+            },
+            "required": true,
+            "description": "ID of user"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "User deleted properly"
+          },
+          "default": {
+            "description": "unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "post": {
+        "description": "Creates new user",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserAdd"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "User created properly"
+          },
+          "default": {
+            "description": "unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "description": "Returns user",
+        "responses": {
+          "200": {
+            "description": "User",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "description": "Edit user",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserEdit"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Account needs to activated after email change",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "User edited properly"
+          },
+          "default": {
+            "description": "unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "description": "Delete user",
+        "responses": {
+          "204": {
+            "description": "User deleted properly"
+          },
+          "default": {
+            "description": "unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/password": {
+      "patch": {
+        "description": "Change password",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordChange"
+              }
+            }
+          }
+        },
+        "responses": {
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "Password changed properly"
+          },
+          "default": {
+            "description": "unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "PasswordChange": {
+        "required": ["passwordOld", "passwordNew"],
+        "properties": {
+          "passwordOld": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 256
+          },
+          "passwordNew": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 256
+          }
+        }
+      },
+      "EmailAndPassword": {
+        "required": ["email", "password"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 256
+          }
+        }
+      },
+      "Roles": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "Users": {
+        "properties": {
+          "users": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/User"
+            }
+          },
+          "total": {
+            "type": "integer"
+          }
+        }
+      },
+      "User": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "username": {
+            "type": "string"
+          },
+          "longName": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "locale": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          }
+        }
+      },
+      "UserAdd": {
+        "required": ["longName", "username", "locale", "email"],
+        "properties": {
+          "username": {
+            "type": "string",
+            "minLength": 5,
+            "maxLength": 256
+          },
+          "longName": {
+            "type": "string",
+            "minLength": 5,
+            "maxLength": 256
+          },
+          "locale": {
+            "type": "string",
+            "pattern": "^[a-z][a-z]_[A-Z][A-Z]$"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "credentials": {
+            "required": ["password"],
+            "properties": {
+              "password": {
+                "type": "string",
+                "minLength": 8,
+                "maxLength": 256
+              }
+            }
+          }
+        }
+      },
+      "UserEdit": {
+        "properties": {
+          "username": {
+            "type": "string",
+            "minLength": 5,
+            "maxLength": 256
+          },
+          "longName": {
+            "type": "string",
+            "minLength": 5,
+            "maxLength": 256
+          },
+          "locale": {
+            "type": "string",
+            "pattern": "^[a-z][a-z]_[A-Z][A-Z]$"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "credentials": {
+            "properties": {
+              "password": {
+                "type": "string",
+                "minLength": 8,
+                "maxLength": 256
+              }
+            }
+          }
+        }
+      },
+      "Message": {
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
 }

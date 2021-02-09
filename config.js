@@ -27,7 +27,7 @@ const config = {
             ? 'mongodb://user:pass@localhost/test?retryWrites=true&authSource=admin'
             : 'mongodb://user:pass@mongo/users?retryWrites=true&authSource=admin'
     },
-    activationURL: 'http://something.local/{{activationCode}}'
+    activationURL: 'http://localhost:8080/activate/{{activationCode}}'
 };
 
 module.exports = config;

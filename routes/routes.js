@@ -14,26 +14,46 @@ router.patch('/activate/:activationCode', usersController.activate);
 
 router.post('/find', authorization.hasRole(['USER']), usersController.find);
 router.post(
-    '/findByEmail',
-    authorization.hasRole(['SYS', 'ADMIN']),
-    validator.validate('email'),
-    usersController.findByEmail
+  '/findByEmail',
+  authorization.hasRole(['SYS', 'ADMIN']),
+  validator.validate('email'),
+  usersController.findByEmail
 );
 router.post(
-    '/findByEmailPassword',
-    authorization.hasRole(['SYS', 'ADMIN']),
-    validator.validate('emailAndPassword'),
-    usersController.findByEmailPassword
+  '/findByEmailPassword',
+  authorization.hasRole(['SYS', 'ADMIN']),
+  validator.validate('emailAndPassword'),
+  usersController.findByEmailPassword
 );
 
-router.patch('/setRoles/:usersId', authorization.hasRole(['ADMIN']), usersController.setRoles);
+router.patch(
+  '/setRoles/:usersId',
+  authorization.hasRole(['ADMIN']),
+  usersController.setRoles
+);
 
-router.patch(':usersId', authorization.hasRole('ADMIN'), validator.validate('editUserSchema'), usersController.edit);
+router.patch(
+  ':usersId',
+  authorization.hasRole('ADMIN'),
+  validator.validate('editUserSchema'),
+  usersController.edit
+);
 router.delete(':usersId', authorization.isUser(), usersController.delete);
 
 router.post('', validator.validate('addUserSchema'), usersController.add);
-router.get('', authorization.hasRole(), usersController.get);
-router.patch('', authorization.isUser(), validator.validate('editUserSchema'), usersController.edit);
+router.get('', authorization.isUser(), usersController.get);
+router.patch(
+  '',
+  authorization.isUser(),
+  validator.validate('editUserSchema'),
+  usersController.edit
+);
+router.patch(
+  '/password',
+  authorization.isUser(),
+  validator.validate('passwordChangeSchema'),
+  usersController.passwordChange
+);
 router.delete('', authorization.isUser(), usersController.delete);
 
 module.exports = router;

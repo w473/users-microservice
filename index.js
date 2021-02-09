@@ -13,43 +13,48 @@ app.use(morgan('combined', { stream: logger.stream }));
 app.use(bodyParser.json());
 
 app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader(
-        'Access-Control-Allow-Methods',
-        'OPTIONS, GET, POST, PUT, PATCH, DELETE'
-    );
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    next();
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader(
+    'Access-Control-Allow-Methods',
+    'OPTIONS, GET, POST, PUT, PATCH, DELETE'
+  );
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  next();
 });
 
 app.use(routes);
 
 app.use((req, res) => {
-    if (!res.headersSent) {
-        res.status(404).json({ message: 'Page you are looking for does not exist' });
-    }
+  if (!res.headersSent) {
+    res
+      .status(404)
+      .json({ message: 'Page you are looking for does not exist' });
+  }
 });
 
 app.use((error, req, res, next) => {
-    if (error instanceof ValidationError) {
-        logger.info(stringify(error));
-        return res.status(400).json({ message: 'Validation error', data: error.validationErrors });
+  if (error instanceof ValidationError) {
+    logger.info(stringify(error));
+    return res
+      .status(400)
+      .json({ message: 'Validation error', data: error.validationErrors });
+  }
+  logger.error(stringify(error));
+  console.log(error);
+  if (!res.headersSent) {
+    if (error.name === 'TokenExpiredError') {
+      return res.status(403).json({ message: 'Token Expired' });
     }
-    logger.error(stringify(error));
-    if (!res.headersSent) {
-        res.status(500).json({ message: 'Unexpected error occured' });
-    }
+    res.status(500).json({ message: 'Unexpected error occured' });
+  }
 });
 
 mongoose
-    .connect(
-        config.db.url,
-        { useNewUrlParser: true }
-    )
-    .then(result => {
-        app.listen(config.port);
-    })
-    .catch(err => {
-        logger.error(JSON.stringify(error));
-        console.log("ERROR 1", err);
-    });
+  .connect(config.db.url, { useNewUrlParser: true })
+  .then((result) => {
+    app.listen(config.port);
+  })
+  .catch((err) => {
+    logger.error(JSON.stringify(err));
+    console.log('ERROR 1', err);
+  });

@@ -36,7 +36,7 @@ exports.hasRole = (role) => {
                 { algorithm: config.auth.jwt.algorithm },
                 (err, token) => {
                     if (err) {
-                        next(err);
+                        return next(err);
                     }
                     req.user = token;
 
