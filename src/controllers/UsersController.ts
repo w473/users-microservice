@@ -4,7 +4,8 @@ import User from '../models/UserModel'
 import { formatOne, formatAll } from '../formatters/UsersFormatter'
 import { sendNewUser, sendNewEmail } from '../services/EmailService'
 import { v4 as uuidv4 } from 'uuid'
-import UserRepository from '../repositories/UserRepository'
+import UserRepository from '../repositories/UsersRepository'
+import { capitalize } from '../libs/Libs';
 
 export const add = (req: Request, res: Response, next: CallableFunction) => {
   return bcrypt
@@ -52,7 +53,7 @@ export const edit = async (
         case 'email':
           newEmail = value != user.getEmail()
           if (newEmail) {
-            user.setActivationCode(uuidv4.toString())
+            user.setActivationCode(uuidv4().toString())
           }
           break
         default:
@@ -63,19 +64,19 @@ export const edit = async (
     await UserRepository.save(user)
 
     if (newEmail) {
-      res
+      sendNewEmail(user)
+      return res
         .status(200)
         .json({ message: 'Account needs to activated after email change' })
-      return sendNewEmail(user)
     }
-    res.status(204).send()
+    return res.status(204).send()
   } catch (err) {
     if (err.code === 11000) {
       return res.status(400).json({
         message: `Field "${Object.keys(err.keyPattern)[0]}" is not unique`
       })
     }
-    next(err)
+    return next(err)
   }
 }
 
@@ -135,7 +136,7 @@ export const deleteUser = async (
     usersId = req.params.usersId
   }
   try {
-    const user = await UserRepository.findOneByUserId(req.user.id)
+    const user = await UserRepository.findOneByUserId(usersId)
     if (!user) {
       return res.status(404).json({ message: `User does not exists` })
     }
@@ -200,19 +201,22 @@ export const find = async (
   res: Response,
   next: CallableFunction
 ) => {
-  const name = <String>req.query.name
+  const name = String(req.query.name ?? '')
   if (name.length < 3) {
     return res.status(400).json({
       message: 'Wrong search params'
     })
   }
-  const where = [`user.name LIKE "%${name}%"`, `user._id!="${req.user.id}"`]
+  const where = [
+    `user.name LIKE "%${name}%"`,
+    `user.familyName LIKE "%${name}%"`,
+    `user._id!="${req.user.id}"`
+  ]
 
   const limit = Number(req.query.limit ?? 10)
   const offset = Number(req.query.offset ?? 0)
   try {
-    const users = UserRepository.find(where, offset, limit)
-
+    const users = await UserRepository.find(where, offset, limit)
     return res.status(200).json({
       users: formatAll(users, true)
     })
@@ -277,7 +281,7 @@ export const passwordChange = async (
     usersId = req.params.usersId
   }
   try {
-    const user = await UserRepository.findOneByUserId(req.user.id)
+    const user = await UserRepository.findOneByUserId(usersId)
     if (!user) {
       return res.status(404).json({ message: `User does not exists` })
     }

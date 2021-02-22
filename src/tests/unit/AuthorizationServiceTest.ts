@@ -1,8 +1,8 @@
-const service = require('../../services/AuthorizationService');
-const httpMocks = require('node-mocks-http');
-const expect = require('chai').expect;
-const jwt = require('jsonwebtoken');
-const sinon = require('sinon');
+import * as service from '../../services/AuthorizationService';
+import httpMocks from 'node-mocks-http';
+import { expect } from 'chai';
+import jwt from 'jsonwebtoken';
+import sinon from 'sinon';
 const token =
   'eyJhbGciOiJSUzUxMiIsImtpZCI6IjQifQ.eyJlbWFpbCI6ImphY2VrQG1haW' +
   'wuY29tIiwiZXhwIjoxNjEwMzA5MjY4LjkzMTgyNDQsImlkIjoiNTEzMDM3MWUtZWFiOS00N' +
@@ -32,7 +32,7 @@ it('jwtVerifyMiddleware ok', function () {
 
   sinon.replace(jwt, 'verify', verify);
 
-  service.jwtVerifyMiddleware(req, res, {});
+  service.jwtVerifyMiddleware(req, res, () => { });
 
   expect(verify.called).to.be.true;
 
@@ -47,7 +47,7 @@ it('jwtVerifyMiddleware no token', function () {
   });
   const res = httpMocks.createResponse();
 
-  service.jwtVerifyMiddleware(req, res, {});
+  service.jwtVerifyMiddleware(req, res, () => { });
   expect(res.statusCode).equals(403);
 });
 
@@ -55,35 +55,38 @@ it('jwtVerifyMiddleware no header', function () {
   const req = httpMocks.createRequest();
   const res = httpMocks.createResponse();
 
-  service.jwtVerifyMiddleware(req, res, {});
+  service.jwtVerifyMiddleware(req, res, () => { });
   expect(res.statusCode).equals(403);
 });
 
 it('hasRole error', function () {
   const req = httpMocks.createRequest();
   req.user = {
+    id: "666",
     roles: ['AA']
   };
   const res = httpMocks.createResponse();
 
-  service.hasRole('USER')(req, res, {});
+  service.hasRole('USER')(req, res, () => { });
   expect(res.statusCode).equals(403);
 });
 
 it('hasRole error array', function () {
   const req = httpMocks.createRequest();
   req.user = {
+    id: "666",
     roles: ['AA']
   };
   const res = httpMocks.createResponse();
 
-  service.hasRole(['USER', 'ADMIN'])(req, res, {});
+  service.hasRole(['USER', 'ADMIN'])(req, res, () => { });
   expect(res.statusCode).equals(403);
 });
 
 it('hasRole ok', function (done) {
   const req = httpMocks.createRequest();
   req.user = {
+    id: "666",
     roles: ['USER']
   };
   const res = httpMocks.createResponse();
@@ -98,6 +101,7 @@ it('hasRole ok', function (done) {
 it('hasRole ok array', function (done) {
   const req = httpMocks.createRequest();
   req.user = {
+    id: "666",
     roles: ['USER']
   };
   const res = httpMocks.createResponse();
@@ -112,6 +116,7 @@ it('hasRole ok array', function (done) {
 it('isAdmin OK', function (done) {
   const req = httpMocks.createRequest();
   req.user = {
+    id: "666",
     roles: ['ADMIN']
   };
   const res = httpMocks.createResponse();
@@ -126,17 +131,19 @@ it('isAdmin OK', function (done) {
 it('isAdmin err', function () {
   const req = httpMocks.createRequest();
   req.user = {
+    id: "666",
     roles: ['USER']
   };
   const res = httpMocks.createResponse();
 
-  service.isAdmin()(req, res, {});
+  service.isAdmin()(req, res, () => { });
   expect(res.statusCode).equals(403);
 });
 
 it('isSystem OK', function (done) {
   const req = httpMocks.createRequest();
   req.user = {
+    id: "666",
     roles: ['SYS']
   };
   const res = httpMocks.createResponse();
@@ -151,10 +158,11 @@ it('isSystem OK', function (done) {
 it('isSystem err', function () {
   const req = httpMocks.createRequest();
   req.user = {
+    id: "666",
     roles: ['AS']
   };
   const res = httpMocks.createResponse();
 
-  service.isSystem()(req, res, {});
+  service.isSystem()(req, res, () => { });
   expect(res.statusCode).equals(403);
 });

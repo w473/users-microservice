@@ -4,12 +4,17 @@ import addFormats from 'ajv-formats'
 const schemas = {
   addUserSchema: {
     type: 'object',
-    required: ['longName', 'username', 'locale', 'email'],
+    required: ['name', 'familyName', 'username', 'locale', 'email'],
     additionalProperties: false,
     properties: {
-      longName: {
+      name: {
         type: 'string',
-        minLength: 5,
+        minLength: 3,
+        maxLength: 256
+      },
+      familyName: {
+        type: 'string',
+        minLength: 3,
         maxLength: 256
       },
       username: {
@@ -43,9 +48,14 @@ const schemas = {
     additionalProperties: false,
     minProperties: 1,
     properties: {
-      longName: {
+      name: {
         type: 'string',
-        minLength: 5,
+        minLength: 3,
+        maxLength: 256
+      },
+      familyName: {
+        type: 'string',
+        minLength: 3,
         maxLength: 256
       },
       username: {
@@ -112,6 +122,6 @@ const schemas = {
 const validator = new Validator({ allErrors: true, schemas: schemas })
 addFormats(validator.ajv)
 
-export const validate = (schemaName: String) => {
+export default function validate (schemaName: String) {
   return validator.validate({ body: schemaName })
 }

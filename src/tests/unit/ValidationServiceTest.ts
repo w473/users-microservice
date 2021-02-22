@@ -1,23 +1,26 @@
-const validate = require('../../services/ValidationService');
-const httpMocks = require('node-mocks-http');
+import validate from '../../services/ValidationService';
+import httpMocks from 'node-mocks-http';
 
-const { assert } = require('chai');
+import { assert } from 'chai';
+import { ValidationError } from 'express-json-validator-middleware';
 
 it('validate addUserSchema Error', function () {
   const tests = [
     {
       body: {},
       errors: [
-        "should have required property 'longName'",
+        "should have required property 'name'",
+        "should have required property 'familyName'",
         "should have required property 'username'",
         "should have required property 'locale'",
         "should have required property 'email'"
       ],
-      count: 4
+      count: 5
     },
     {
       body: {
-        longName: 'po',
+        name: 'po',
+        familyName: 'po',
         username: 'potato',
         locale: 'potato',
         email: '',
@@ -26,16 +29,18 @@ it('validate addUserSchema Error', function () {
       },
       errors: [
         'should NOT have additional properties',
-        'should NOT have fewer than 5 characters',
+        'should NOT have fewer than 3 characters',
+        'should NOT have fewer than 3 characters',
         'should match pattern "^[a-z][a-z]_[A-Z][A-Z]$"',
         'should match format "email"',
         'should be object'
       ],
-      count: 5
+      count: 6
     },
     {
       body: {
-        longName: 'poasfdadasd',
+        name: 'poasfdadasd',
+        familyName: 'poasfdadasd',
         username: 'potasdasdasd',
         locale: 'pl_PL',
         email: 'aa@ee.pl',
@@ -52,8 +57,9 @@ it('validate addUserSchema Error', function () {
 });
 
 it('validate addUserSchema Ok', function () {
-  body = {
-    longName: 'poasfdadasd',
+  const body = {
+    name: 'poasfdadasd',
+    familyName: 'poasfdadasd',
     username: 'potasdasdasd',
     locale: 'pl_PL',
     email: 'aa@ee.pl',
@@ -74,38 +80,35 @@ it('validate editUserSchema Error', function () {
     },
     {
       body: {
-        longName: 'po',
+        name: 'po',
+        familyName: 'po',
         username: 'potato',
         locale: 'potato',
         email: '',
-        credentials: '',
         dasdads: ''
       },
       errors: [
         'should NOT have additional properties',
-        'should NOT have fewer than 5 characters',
+        'should NOT have fewer than 3 characters',
+        'should NOT have fewer than 3 characters',
         'should match pattern "^[a-z][a-z]_[A-Z][A-Z]$"',
-        'should match format "email"',
-        'should be object'
+        'should match format "email"'
       ],
       count: 5
     },
     {
       body: {
         sasda: 'ASAS',
-        longName: 'poasfdadasd',
-        username: 'potasdasdasd',
+        name: 'poasfdadasd',
+        familyName: 'poasfdadasd',
+        username: 'poasfdadasd',
         locale: 'pl_PL',
-        email: 'aa@ee.pl',
-        credentials: {
-          password: ''
-        }
+        email: 'aa@ee.pl'
       },
       errors: [
-        'should NOT have additional properties',
-        'should NOT have fewer than 8 characters'
+        'should NOT have additional properties'
       ],
-      count: 2
+      count: 1
     }
   ];
 
@@ -113,16 +116,13 @@ it('validate editUserSchema Error', function () {
 });
 
 it('validate editUserSchema Ok', function () {
-  body = {
-    longName: 'poasfdadasdss'
+  const body = {
+    familyName: 'poasfdadasdss'
   };
   testValidateOk('editUserSchema', body);
 });
 
 it('validate emailAndPassword Error', function () {
-  const req = httpMocks.createRequest();
-  const res = httpMocks.createResponse();
-
   const tests = [
     {
       body: {},
@@ -151,7 +151,7 @@ it('validate emailAndPassword Error', function () {
 });
 
 it('validate emailAndPassword Ok', function () {
-  body = {
+  const body = {
     email: 'aaaa@eeee.pl',
     password: 'zfsafasfasfd'
   };
@@ -183,26 +183,21 @@ it('validate email Error', function () {
 });
 
 it('validate email Ok', function () {
-  body = {
+  const body = {
     email: 'email@email.de'
   };
   testValidateOk('email', body);
 });
 
-/**
- *
- * @param {String} schemaName
- * @param {Array} tests
- */
-const testValidateError = (schemaName, tests) => {
+const testValidateError = (schemaName: string, tests: Array<any>) => {
   const req = httpMocks.createRequest();
   const res = httpMocks.createResponse();
   tests.forEach((data) => {
     req.body = data.body;
-    const next = (err) => {
+    const next = (err: any) => {
       assert.typeOf(err, 'error');
       assert.equal(err.name, 'JsonSchemaValidationError');
-      data.errors.forEach((error, index) => {
+      data.errors.forEach((error: ValidationError, index: number) => {
         assert.equal(err.validationErrors.body[index].message, error);
       });
       assert.equal(data.count, err.validationErrors.body.length);
@@ -210,16 +205,12 @@ const testValidateError = (schemaName, tests) => {
     validate(schemaName)(req, res, next);
   });
 };
-/**
- *
- * @param {String} schemaName
- * @param {Object} body
- */
-const testValidateOk = (schemaName, body) => {
+
+const testValidateOk = (schemaName: string, body: any) => {
   const req = httpMocks.createRequest();
   req.body = body;
   const res = httpMocks.createResponse();
-  const next = (err) => {
+  const next = (err: any) => {
     assert.equal(err, undefined);
   };
   validate(schemaName)(req, res, next);

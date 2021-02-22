@@ -1,6 +1,6 @@
 import express from 'express';
 import { hasRole, isUser } from '../services/AuthorizationService';
-import validator from '../services/ValidationService';
+import validate from '../services/ValidationService';
 import * as usersController from '../controllers/UsersController';
 import swaggerUi from 'swagger-ui-express';
 import openApiDocs from './openApiDocs.json';
@@ -16,13 +16,13 @@ router.get('/find', hasRole(['USER']), usersController.find);
 router.post(
   '/findByEmail',
   hasRole(['SYS', 'ADMIN']),
-  validator.validate('email'),
+  validate('email'),
   usersController.findByEmail
 );
 router.post(
   '/findByEmailPassword',
   hasRole(['SYS', 'ADMIN']),
-  validator.validate('emailAndPassword'),
+  validate('emailAndPassword'),
   usersController.findByEmailPassword
 );
 
@@ -35,12 +35,12 @@ router.patch(
 router.patch(
   ':usersId',
   hasRole('ADMIN'),
-  validator.validate('editUserSchema'),
+  validate('editUserSchema'),
   usersController.edit
 );
 router.delete(':usersId', isUser(), usersController.deleteUser);
 
-router.post('', validator.validate('addUserSchema'), usersController.add);
+router.post('', validate('addUserSchema'), usersController.add);
 router.get('', isUser(), usersController.get);
 router.get(
   '/:username',
@@ -51,13 +51,13 @@ router.get(
 router.patch(
   '',
   isUser(),
-  validator.validate('editUserSchema'),
+  validate('editUserSchema'),
   usersController.edit
 );
 router.patch(
   '/password',
   isUser(),
-  validator.validate('passwordChangeSchema'),
+  validate('passwordChangeSchema'),
   usersController.passwordChange
 );
 router.delete('', isUser(), usersController.deleteUser);

@@ -5,7 +5,7 @@ import { ValidationError } from 'express-json-validator-middleware';
 import { Request, Response } from './libs/Models'
 import routes from './routes/Routes';
 import { logger, stream } from './services/LoggerService';
-import { db } from './services/DBService';
+import { dbObject } from './services/DBService';
 import config from '../config';
 
 const app = express();
@@ -52,7 +52,7 @@ app.use((error: Error | ValidationError, _1: Request, res: Response, _2: Callabl
   return null;
 });
 
-db.createDatabase(config.db.name)
+dbObject.connect()
   .then((_) => {
     app.listen(config.port);
   })

@@ -26,88 +26,88 @@ export default class User extends Base {
     this.locale = locale
   }
 
-  public setActivationCode(activationCode: string | undefined): void {
+  public setActivationCode (activationCode: string | undefined): void {
     this.credentials.setActivationCode(activationCode)
-    this.isActive = activationCode != undefined && activationCode.length === 0
+    this.isActive = (!activationCode || activationCode.length === 0)
   }
 
-  public serialize() {
+  public serialize () {
     return Object.assign(super.serialize(), {
       username: this.username,
       name: this.name,
       familyName: this.familyName,
       email: this.email,
       locale: this.locale,
-      credentials: this.credentials,
+      credentials: this.credentials.serialize(),
       roles: this.roles,
       isActive: this.isActive
     })
   }
 
-  public getKey(): string {
+  public getKey (): string {
     if (this._key) {
       return this._key.toString()
     }
     return ''
   }
 
-  public getEmail(): string {
+  public getEmail (): string {
     return this.email
   }
 
-  public setEmail(email: string): void {
+  public setEmail (email: string): void {
     this.email = email
   }
 
-  public getUsername(): string {
+  public getUsername (): string {
     return this.username
   }
 
-  public setUsername(username: string): void {
+  public setUsername (username: string): void {
     this.username = username
   }
 
-  public getName(): string {
+  public getName (): string {
     return this.name
   }
 
-  public setName(name: string): void {
+  public setName (name: string): void {
     this.name = name
   }
 
-  public getFamilyName(): string {
+  public getFamilyName (): string {
     return this.familyName
   }
 
-  public setFamilyName(familyName: string): void {
+  public setFamilyName (familyName: string): void {
     this.familyName = familyName
   }
 
-  public getLocale(): string {
+  public getLocale (): string {
     return this.locale
   }
 
-  public setLocale(locale: string): void {
+  public setLocale (locale: string): void {
     this.locale = locale
   }
 
-  public getCredentials(): Credentials {
+  public getCredentials (): Credentials {
     return this.credentials
   }
 
-  public getRoles(): Array<string> {
+  public getRoles (): Array<string> {
     return this.roles
   }
 
-  public setRoles(roles: Array<string>): void {
+  public setRoles (roles: Array<string>): void {
     this.roles = roles
   }
 
-  public getIsActive(): boolean {
+  public getIsActive (): boolean {
     return this.isActive
   }
 
-  public setIsActive(isActive: boolean): void {
+  public setIsActive (isActive: boolean): void {
     this.isActive = isActive
   }
 }
@@ -116,22 +116,22 @@ class Credentials {
   private password!: string | undefined
   private activationCode!: string | undefined
 
-  public getPassword(): string | undefined {
+  public getPassword (): string | undefined {
     return this.password
   }
-  public setPassword(password: string): void {
+  public setPassword (password: string): void {
     this.password = password
   }
 
-  public setActivationCode(activationCode: string | undefined): void {
+  public setActivationCode (activationCode: string | undefined): void {
     this.activationCode = activationCode
   }
 
-  public getActivationCode(): string | undefined {
+  public getActivationCode (): string | undefined {
     return this.activationCode
   }
 
-  public serialize(): object {
+  public serialize (): object {
     const ret: any = {}
     if (this.password) {
       ret.password = this.password

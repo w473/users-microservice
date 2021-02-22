@@ -1,5 +1,6 @@
 import User from '../models/UserModel';
 import config from '../../config'
+import fetch from 'node-fetch'
 
 /**
  * 
@@ -76,9 +77,6 @@ const post = (url: string, data: object, token: String | null = null) => {
         url,
         {
             method: 'POST',
-            mode: 'cors',
-            cache: 'no-cache',
-            credentials: 'same-origin',
             headers: headers,
             redirect: 'error',
             body: JSON.stringify(data)

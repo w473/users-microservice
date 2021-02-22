@@ -24,6 +24,8 @@ const config = {
   emailService: 'http://mailer',
   db: {
     url: 'http://127.0.0.1:8529',
+    login: 'root',
+    password: 'pass',
     name: process.env.ENV == 'test' ? 'user_test' : 'user'
   },
   activationURL: 'http://localhost:8080/activate/{{activationCode}}'
