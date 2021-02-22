@@ -1,9 +1,9 @@
-const express = require('express');
-const authorization = require('../services/authorizationService');
-const validator = require('../services/validationService');
-const usersController = require('../controllers/usersController');
-const swaggerUi = require('swagger-ui-express');
-const openApiDocs = require('./openApiDocs.json');
+import express from 'express';
+import { hasRole, isUser } from '../services/AuthorizationService';
+import validator from '../services/ValidationService';
+import * as usersController from '../controllers/UsersController';
+import swaggerUi from 'swagger-ui-express';
+import openApiDocs from './openApiDocs.json';
 
 const router = express.Router();
 
@@ -12,48 +12,54 @@ router.get('/api-docs', swaggerUi.setup(openApiDocs));
 
 router.patch('/activate/:activationCode', usersController.activate);
 
-router.post('/find', authorization.hasRole(['USER']), usersController.find);
+router.get('/find', hasRole(['USER']), usersController.find);
 router.post(
   '/findByEmail',
-  authorization.hasRole(['SYS', 'ADMIN']),
+  hasRole(['SYS', 'ADMIN']),
   validator.validate('email'),
   usersController.findByEmail
 );
 router.post(
   '/findByEmailPassword',
-  authorization.hasRole(['SYS', 'ADMIN']),
+  hasRole(['SYS', 'ADMIN']),
   validator.validate('emailAndPassword'),
   usersController.findByEmailPassword
 );
 
 router.patch(
   '/setRoles/:usersId',
-  authorization.hasRole(['ADMIN']),
+  hasRole(['ADMIN']),
   usersController.setRoles
 );
 
 router.patch(
   ':usersId',
-  authorization.hasRole('ADMIN'),
+  hasRole('ADMIN'),
   validator.validate('editUserSchema'),
   usersController.edit
 );
-router.delete(':usersId', authorization.isUser(), usersController.delete);
+router.delete(':usersId', isUser(), usersController.deleteUser);
 
 router.post('', validator.validate('addUserSchema'), usersController.add);
-router.get('', authorization.isUser(), usersController.get);
+router.get('', isUser(), usersController.get);
+router.get(
+  '/:username',
+  isUser(),
+  usersController.findByUsername
+);
+
 router.patch(
   '',
-  authorization.isUser(),
+  isUser(),
   validator.validate('editUserSchema'),
   usersController.edit
 );
 router.patch(
   '/password',
-  authorization.isUser(),
+  isUser(),
   validator.validate('passwordChangeSchema'),
   usersController.passwordChange
 );
-router.delete('', authorization.isUser(), usersController.delete);
+router.delete('', isUser(), usersController.deleteUser);
 
-module.exports = router;
+export default router;

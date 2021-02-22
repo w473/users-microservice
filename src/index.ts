@@ -1,18 +1,20 @@
-const app = require('express')();
-const mongoose = require('mongoose');
-const bodyParser = require('body-parser');
-const routes = require('./routes/routes');
-const config = require('./config');
-const { ValidationError } = require('express-json-validator-middleware');
-const morgan = require('morgan');
-const logger = require('./services/loggerService');
-const stringify = require('json-stringify-safe');
+import express from 'express';
+import morgan from 'morgan';
+import stringify from 'json-stringify-safe';
+import { ValidationError } from 'express-json-validator-middleware';
+import { Request, Response } from './libs/Models'
+import routes from './routes/Routes';
+import { logger, stream } from './services/LoggerService';
+import { db } from './services/DBService';
+import config from '../config';
 
-app.use(morgan('combined', { stream: logger.stream }));
+const app = express();
 
-app.use(bodyParser.json());
+app.use(morgan('combined', { stream: stream }));
 
-app.use((req, res, next) => {
+app.use(express.json());
+
+app.use((_, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader(
     'Access-Control-Allow-Methods',
@@ -24,7 +26,7 @@ app.use((req, res, next) => {
 
 app.use(routes);
 
-app.use((req, res) => {
+app.use((_, res: Response) => {
   if (!res.headersSent) {
     res
       .status(404)
@@ -32,7 +34,7 @@ app.use((req, res) => {
   }
 });
 
-app.use((error, req, res, next) => {
+app.use((error: Error | ValidationError, _1: Request, res: Response, _2: CallableFunction) => {
   if (error instanceof ValidationError) {
     logger.info(stringify(error));
     return res
@@ -47,11 +49,11 @@ app.use((error, req, res, next) => {
     }
     res.status(500).json({ message: 'Unexpected error occured' });
   }
+  return null;
 });
 
-mongoose
-  .connect(config.db.url, { useNewUrlParser: true })
-  .then((result) => {
+db.createDatabase(config.db.name)
+  .then((_) => {
     app.listen(config.port);
   })
   .catch((err) => {

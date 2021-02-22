@@ -1,28 +1,29 @@
-const bcrypt = require('bcryptjs');
-const User = require('../models/userModel');
-const MUUID = require('uuid-mongodb');
-const usersFormatter = require('../formatters/usersFormatter');
-const emailService = require('../services/emailService');
+import { Request, Response } from '../libs/Models'
+import bcrypt from 'bcryptjs';
+import User from '../models/UserModel';
+import { formatOne } from '../formatters/UsersFormatter';
+import { sendNewUser, sendNewEmail } from '../services/EmailService';
+import { v4 as uuidv4 } from 'uuid';
+import UserRepository from '../repositories/UserRepository';
 
-exports.add = (req, res, next) => {
+export const add = (req: Request, res: Response, next: CallableFunction) => {
   return bcrypt
     .hash(req.body.credentials.password, 12)
     .then((password) => {
-      const user = new User({
-        longName: req.body.longName,
-        username: req.body.username,
-        locale: req.body.locale,
-        credentials: {
-          password: password,
-          activationCode: MUUID.v4().toString()
-        },
-        email: req.body.email
-      });
-      return user.save();
+      const user = new User(
+        req.body.username,
+        req.body.name,
+        req.body.familyName,
+        req.body.email,
+        req.body.locale
+      )
+      user.bootNew().getCredentials().setPassword(password);
+      user.setActivationCode(uuidv4().toString());
+      return UserRepository.save(user);
     })
     .then((user) => {
       res.status(204).send();
-      return emailService.sendNewUser(user);
+      return sendNewUser(user);
     })
     .catch((err) => {
       if (err.code === 11000) {
@@ -30,11 +31,11 @@ exports.add = (req, res, next) => {
           message: `Field "${Object.keys(err.keyPattern)[0]}" is not unique`
         });
       }
-      next(err);
+      return next(err);
     });
 };
 
-exports.edit = async (req, res, next) => {
+export const edit = async (req: Request, res: Response, next: CallableFunction) => {
   try {
     const user = await User.findById(MUUID.from(req.user.id));
     if (!user) {
@@ -48,7 +49,7 @@ exports.edit = async (req, res, next) => {
           newEmail = value != user.email;
           if (newEmail) {
             user.isActive = false;
-            user.credentials.activationCode = MUUID.v4().toString();
+            user.credentials.activationCode = uuidv4.toString()
           }
         default:
           user[key] = value;
@@ -60,7 +61,7 @@ exports.edit = async (req, res, next) => {
       res
         .status(200)
         .json({ message: 'Account needs to activated after email change' });
-      return emailService.sendNewEmail(user);
+      return sendNewEmail(user);
     }
     res.status(204).send();
   } catch (err) {
@@ -73,7 +74,22 @@ exports.edit = async (req, res, next) => {
   }
 };
 
-exports.get = (req, res, next) => {
+export const findByUsername = (req: Request, res: Response, next: CallableFunction) => {
+  const where = {
+    username: req.params.username
+  };
+  return User.findOne(where)
+    .exec()
+    .then((user) => {
+      if (!user) {
+        return res.status(404).json({ message: `User does not exists` });
+      }
+      return res.status(200).json(formatOne(user));
+    })
+    .catch((err) => next(err));
+};
+
+export const get = (req: Request, res: Response, next: CallableFunction) => {
   let usersId = req.user.id;
 
   if (req.params.usersId && req.user.id != req.params.usersId) {
@@ -88,12 +104,12 @@ exports.get = (req, res, next) => {
       if (!user) {
         return res.status(404).json({ message: `User does not exists` });
       }
-      return res.status(200).json(usersFormatter.formatOne(user));
+      return res.status(200).json(formatOne(user));
     })
     .catch((err) => next(err));
 };
 
-exports.delete = (req, res, next) => {
+export const deleteUser = (req: Request, res: Response, next: CallableFunction) => {
   let usersId = req.user.id;
   if (req.params.usersId && req.user.id != req.params.usersId) {
     if (req.user.roles.indexOf('ADMIN') === -1) {
@@ -113,7 +129,7 @@ exports.delete = (req, res, next) => {
     .catch((err) => next(err));
 };
 
-exports.setRoles = (req, res, next) => {
+export const setRoles = (req: Request, res: Response, next: CallableFunction) => {
   const usersId = req.params.usersId;
   if (usersId == req.user.id || req.body.roles.lastIndexOf('SYS') !== -1) {
     return res.status(403).json({ message: `Not Allowed` });
@@ -138,7 +154,7 @@ exports.setRoles = (req, res, next) => {
     .catch((err) => next(err));
 };
 
-exports.activate = (req, res, next) => {
+export const activate = (req: Request, res: Response, next: CallableFunction) => {
   return User.findOne({
     'credentials.activationCode': req.params.activationCode
   })
@@ -159,32 +175,47 @@ exports.activate = (req, res, next) => {
     .catch((err) => next(err));
 };
 
-exports.find = async (req, res, next) => {
-  const where = {};
+export const find = async (req: Request, res: Response, next: CallableFunction) => {
+  const longName = req.query.longName;
+  if (longName.length < 3) {
+    return res.status(400).json({
+      message: 'Wrong search params'
+    });
+  }
+  const where = {
+    longName: new RegExp(longName, 'i'),
+    _id: { $ne: MUUID.from(req.user.id) }
+  };
+
+  const limit = req.query.limit ?? 10;
+  const offset = req.query.offset ?? 0;
+
   return User.find(where)
+    .limit(limit)
+    .skip(offset)
+    .sort({ longName: 1 })
     .exec()
     .then((users) => {
       return res.status(200).json({
-        users: usersFormatter.formatAll(users, true),
-        total: 666
+        users: usersFormatter.formatAll(users, true)
       });
     })
     .catch((err) => next(err));
 };
 
-exports.findByEmail = async (req, res, next) => {
+export const findByEmail = async (req: Request, res: Response, next: CallableFunction) => {
   return User.findOne({ email: req.body.email })
     .exec()
     .then((user) => {
       if (!user) {
         return res.status(404).json({ message: `User does not exists` });
       }
-      return res.status(200).json(usersFormatter.formatOne(user));
+      return res.status(200).json(formatOne(user));
     })
     .catch((err) => next(err));
 };
 
-exports.findByEmailPassword = async (req, res, next) => {
+export const findByEmailPassword = async (req: Request, res: Response, next: CallableFunction) => {
   return User.findOne({ email: req.body.email })
     .exec()
     .then((user) => {
@@ -192,14 +223,14 @@ exports.findByEmailPassword = async (req, res, next) => {
         return res.status(404).json({ message: `User does not exist` });
       }
       if (bcrypt.compareSync(req.body.password, user.credentials.password)) {
-        return res.status(200).json(usersFormatter.formatOne(user));
+        return res.status(200).json(formatOne(user));
       }
       return res.status(404).json({ message: `User does not exists` });
     })
     .catch((err) => next(err));
 };
 
-exports.passwordChange = async (req, res, next) => {
+export const passwordChange = async (req: Request, res: Response, next: CallableFunction) => {
   let usersId = req.user.id;
 
   if (req.params.usersId && req.user.id != req.params.usersId) {
