@@ -1,8 +1,5 @@
-const {
-  Validator,
-  ValidationError
-} = require('express-json-validator-middleware');
-const addFormats = require('ajv-formats');
+import { Validator } from 'express-json-validator-middleware'
+import addFormats from 'ajv-formats'
 
 const schemas = {
   addUserSchema: {
@@ -110,15 +107,11 @@ const schemas = {
       }
     }
   }
-};
+}
 
-const validator = new Validator({ allErrors: true, schemas: schemas });
-addFormats(validator.ajv);
+const validator = new Validator({ allErrors: true, schemas: schemas })
+addFormats(validator.ajv)
 
-/**
- *
- * @param {String} schemaName
- */
-exports.validate = (schemaName) => {
-  return validator.validate({ body: schemaName });
-};
+export const validate = (schemaName: String) => {
+  return validator.validate({ body: schemaName })
+}

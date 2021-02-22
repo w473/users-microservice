@@ -1,111 +1,144 @@
-import Base from './BaseModel';
+import Base from './BaseModel'
 
 export default class User extends Base {
-  private username: String
-  private name: String
-  private familyName: String
-  private email: String
-  private locale: String
-  private credentials!: Credentials
-  private roles: Array<String> = ['USER'];
+  private username: string
+  private name: string
+  private familyName: string
+  private email: string
+  private locale: string
+  private credentials: Credentials
+  private roles: Array<string> = ['USER']
   private isActive: boolean = true
 
-  constructor(username: String, name: String, familyName: String, email: String, locale: String) {
-    super();
-    this.username = username;
-    this.name = name;
-    this.familyName = familyName;
-    this.email = email;
-    this.locale = locale;
+  constructor(
+    username: string,
+    name: string,
+    familyName: string,
+    email: string,
+    locale: string
+  ) {
+    super()
+    this.credentials = new Credentials()
+    this.username = username
+    this.name = name
+    this.familyName = familyName
+    this.email = email
+    this.locale = locale
   }
 
-  public setActivationCode (activationCode: String): void {
-    this.credentials.setActivationCode(activationCode);
-    this.isActive = activationCode.length === 0
+  public setActivationCode(activationCode: string | undefined): void {
+    this.credentials.setActivationCode(activationCode)
+    this.isActive = activationCode != undefined && activationCode.length === 0
   }
 
-  public serialize () {
-    return Object.assign(
-      super.serialize(),
-      {
-        username: this.username,
-        name: this.name,
-        familyName: this.familyName,
-        email: this.email,
-        locale: this.locale,
-        credentials: this.credentials,
-        roles: this.roles,
-        isActive: this.isActive,
-      }
-    );
+  public serialize() {
+    return Object.assign(super.serialize(), {
+      username: this.username,
+      name: this.name,
+      familyName: this.familyName,
+      email: this.email,
+      locale: this.locale,
+      credentials: this.credentials,
+      roles: this.roles,
+      isActive: this.isActive
+    })
   }
 
-  public getKey (): String {
+  public getKey(): string {
     if (this._key) {
-      return this._key.toString();
+      return this._key.toString()
     }
-    return '';
+    return ''
   }
 
-  public getEmail (): String {
-    return this.email;
+  public getEmail(): string {
+    return this.email
   }
 
-  public getUsername (): String {
-    return this.username;
+  public setEmail(email: string): void {
+    this.email = email
   }
 
-  public getName (): String {
-    return this.name;
+  public getUsername(): string {
+    return this.username
   }
 
-  public getFamilyName (): String {
-    return this.familyName;
+  public setUsername(username: string): void {
+    this.username = username
   }
 
-  public getLocale (): String {
-    return this.locale;
+  public getName(): string {
+    return this.name
   }
 
-  public getCredentials (): Credentials {
-    return this.credentials;
+  public setName(name: string): void {
+    this.name = name
   }
 
-  public getRoles (): Array<String> {
-    return this.roles;
+  public getFamilyName(): string {
+    return this.familyName
   }
-  public getIsActive (): boolean {
+
+  public setFamilyName(familyName: string): void {
+    this.familyName = familyName
+  }
+
+  public getLocale(): string {
+    return this.locale
+  }
+
+  public setLocale(locale: string): void {
+    this.locale = locale
+  }
+
+  public getCredentials(): Credentials {
+    return this.credentials
+  }
+
+  public getRoles(): Array<string> {
+    return this.roles
+  }
+
+  public setRoles(roles: Array<string>): void {
+    this.roles = roles
+  }
+
+  public getIsActive(): boolean {
     return this.isActive
   }
-};
+
+  public setIsActive(isActive: boolean): void {
+    this.isActive = isActive
+  }
+}
 
 class Credentials {
-  private password!: String | null
-  private activationCode!: String | null
+  private password!: string | undefined
+  private activationCode!: string | undefined
 
-  public getPassword (): String | null {
-    return this.password;
+  public getPassword(): string | undefined {
+    return this.password
   }
-  public setPassword (password: String): void {
-    this.password = password;
-  }
-
-  public setActivationCode (activationCode: String): void {
-    this.activationCode = activationCode;
+  public setPassword(password: string): void {
+    this.password = password
   }
 
-  public getActivationCode (): String | null {
-    return this.activationCode;
+  public setActivationCode(activationCode: string | undefined): void {
+    this.activationCode = activationCode
   }
 
-  public serialize (): object {
-    const ret: any = {};
+  public getActivationCode(): string | undefined {
+    return this.activationCode
+  }
+
+  public serialize(): object {
+    const ret: any = {}
     if (this.password) {
-      ret.password = this.password;
+      ret.password = this.password
     }
     if (this.activationCode) {
-      ret.activationCode = this.activationCode;
+      ret.activationCode = this.activationCode
     }
-    return ret;
+    return ret
   }
 }
