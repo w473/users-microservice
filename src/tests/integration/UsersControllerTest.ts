@@ -3,6 +3,7 @@ import { assert } from 'chai'
 
 import * as UsersController from '../../controllers/UsersController'
 import db, { connect } from '../../services/DBService';
+import { aql } from 'arangojs';
 
 const stubData = [
   {
@@ -52,7 +53,17 @@ describe('Users', () => {
     return connect();
   })
   beforeEach(async () => {
-    return db().collection('users').removeAll(stubData)
+    return db()
+      .query(aql`
+        FOR user IN users
+        RETURN user`
+      )
+      .then(usersCursor => {
+        return usersCursor.all();
+      })
+      .then(users => {
+        return db().collection('users').removeAll(users);
+      })
       .then(() => {
         return db().collection('users').saveAll(stubData);
       })
@@ -60,10 +71,6 @@ describe('Users', () => {
         console.log('ERROR 1', err)
       })
   })
-
-  // after(async () => {
-  //   return db.disconnect();
-  // });
 
   it('2 users should be returned', async () => {
     const req = httpMocks.createRequest()
@@ -161,19 +168,19 @@ describe('Users', () => {
     })
   })
 
-  // it('activate 404', async () => {
-  //   const req = httpMocks.createRequest()
-  //   req.params = {
-  //     activationCode: 'eeefffee@emailexample.de'
-  //   }
-  //   const res = httpMocks.createResponse()
+  it('activate 404', async () => {
+    const req = httpMocks.createRequest()
+    req.params = {
+      activationCode: 'eeefffee@emailexample.de'
+    }
+    const res = httpMocks.createResponse()
 
-  //   const next = (err: Error) => console.log(err)
-  //   await UsersController.activate(req, res, next)
-  //   assert.equal(res.statusCode, 404)
-  //   const json = res._getJSONData()
-  //   assert.equal(json.message, `User does not exists`)
-  // })
+    const next = (err: Error) => console.log(err)
+    await UsersController.activate(req, res, next)
+    assert.equal(res.statusCode, 404)
+    const json = res._getJSONData()
+    assert.equal(json.message, `User does not exists`)
+  })
 
   it('activate', async () => {
     const req = httpMocks.createRequest()
@@ -375,26 +382,6 @@ describe('Users', () => {
     })
   })
 
-  // it('edit change password', async () => {
-  //   const req = httpMocks.createRequest()
-  //   req.user = {
-  //     id: 'f10f7c9d-745d-4481-a86a-3dc67e186fed',
-  //     roles: ['USER']
-  //   }
-  //   req.body = {
-  //     password: 'potato'
-  //   }
-
-  //   let res = httpMocks.createResponse()
-
-  //   const next = (err: Error) => console.log(err)
-
-  //   res = httpMocks.createResponse()
-  //   await UsersController.edit(req, res, next)
-
-  //   assert.equal(res.statusCode, 204)
-  // })
-
   it('edit change duplicated email', async () => {
     const req = httpMocks.createRequest()
     req.user = {
@@ -418,174 +405,270 @@ describe('Users', () => {
     })
   })
 
-  // it('edit change duplicated username', async () => {
-  //   const req = httpMocks.createRequest()
-  //   req.user = {
-  //     id: 'f10f7c9d-745d-4481-a86a-3dc67e186fed',
-  //     roles: ['USER']
-  //   }
-  //   req.body = {
-  //     username: 'otherusername'
-  //   }
+  it('edit change duplicated username', async () => {
+    const req = httpMocks.createRequest()
+    req.user = {
+      id: 'f10f7c9d-745d-4481-a86a-3dc67e186fed',
+      roles: ['USER']
+    }
+    req.body = {
+      username: 'otherusername'
+    }
 
-  //   let res = httpMocks.createResponse()
+    let res = httpMocks.createResponse()
 
-  //   const next = (err: Error) => console.log(err)
+    const next = (err: Error) => console.log(err)
 
-  //   res = httpMocks.createResponse()
-  //   await UsersController.edit(req, res, next)
+    res = httpMocks.createResponse()
+    await UsersController.edit(req, res, next)
 
-  //   assert.equal(res.statusCode, 400)
-  //   assert.deepEqual(res._getJSONData(), {
-  //     message: 'Field "username" is not unique'
-  //   })
-  // })
+    assert.equal(res.statusCode, 400)
+    assert.deepEqual(res._getJSONData(), {
+      message: 'Field "username" is not unique'
+    })
+  })
 
-  // it('add', async () => {
-  //   const req = httpMocks.createRequest()
-  //   req.body = {
-  //     longName: 'otherusername',
-  //     username: 'otherusernamea',
-  //     locale: 'pl_PL',
-  //     credentials: {
-  //       password: 'tomatoaa'
-  //     },
-  //     email: 'some@emailaa.de'
-  //   }
+  it('add', async () => {
+    const req = httpMocks.createRequest()
+    req.body = {
+      name: 'eeeeeeeeeee',
+      familyName: 'otherusername',
+      username: 'otherusernamea',
+      locale: 'pl_PL',
+      credentials: {
+        password: 'tomatoaa'
+      },
+      email: 'some@emailaa.de'
+    }
 
-  //   let res = httpMocks.createResponse()
+    let res = httpMocks.createResponse()
 
-  //   const next = (err: Error) => console.log(err)
+    const next = (err: Error) => console.log(err)
 
-  //   res = httpMocks.createResponse()
-  //   await UsersController.add(req, res, next)
+    res = httpMocks.createResponse()
+    await UsersController.add(req, res, next)
 
-  //   assert.equal(res.statusCode, 200)
-  //   assert.deepEqual(res._getJSONData(), {
-  //     message: 'New user added successfuly'
-  //   })
+    assert.equal(res.statusCode, 204)
 
-  //   res = httpMocks.createResponse()
+    res = httpMocks.createResponse()
 
-  //   req.body = {
-  //     email: 'some@emailaa.de'
-  //   }
-  //   res = httpMocks.createResponse()
+    req.body = {
+      email: 'some@emailaa.de'
+    }
+    res = httpMocks.createResponse()
 
-  //   await UsersController.findByEmail(req, res, next)
-  //   assert.equal(res.statusCode, 200)
-  //   const json = res._getJSONData()
-  //   assert.equal(json.message, 'User data found')
-  //   assert.equal(json.data.username, 'otherusernamea')
-  //   assert.equal(json.data.longName, 'otherusername')
-  //   assert.equal(json.data.isActive, false)
-  //   assert.deepEqual(json.data.roles, ['USER'])
-  //   assert.equal(json.data.email, 'some@emailaa.de')
-  //   assert.equal(json.data.locale, 'pl_PL')
-  // })
+    await UsersController.findByEmail(req, res, next)
+    assert.equal(res.statusCode, 200)
 
-  // it('add username not unique', async () => {
-  //   const req = httpMocks.createRequest()
-  //   req.body = {
-  //     longName: 'otherusername',
-  //     username: 'otherusername',
-  //     locale: 'pl_PL',
-  //     credentials: {
-  //       password: 'tomatoaa'
-  //     },
-  //     email: 'some@emailaa.de'
-  //   }
+    const json = res._getJSONData()
+    assert.deepEqual(
+      json,
+      {
+        id: json.id,
+        username: 'otherusernamea',
+        name: 'eeeeeeeeeee',
+        familyName: 'otherusername',
+        isActive: false,
+        roles: ['USER'],
+        email: 'some@emailaa.de',
+        locale: 'pl_PL'
+      }
+    )
+  })
 
-  //   let res = httpMocks.createResponse()
+  it('add username not unique', async () => {
+    const req = httpMocks.createRequest()
+    req.body = {
+      name: 'otherusername',
+      familyName: 'otheruser',
+      username: 'otherusername',
+      locale: 'pl_PL',
+      credentials: {
+        password: 'tomatoaa'
+      },
+      email: 'some@emailaa.de'
+    }
 
-  //   const next = (err: Error) => console.log(err)
+    let res = httpMocks.createResponse()
 
-  //   res = httpMocks.createResponse()
-  //   await UsersController.add(req, res, next)
+    const next = (err: Error) => console.log(err)
 
-  //   assert.equal(res.statusCode, 400)
-  //   assert.deepEqual(res._getJSONData(), {
-  //     message: 'Field "username" is not unique'
-  //   })
-  // })
+    res = httpMocks.createResponse()
+    await UsersController.add(req, res, next)
 
-  // it('setRoles', async () => {
-  //   const req = httpMocks.createRequest()
-  //   req.user = {
-  //     id: 'f10f7c9d-745d-4481-a86a-3dc67e186fed',
-  //     roles: ['USER', 'ADMIN']
-  //   }
-  //   req.params.usersId = '393967e0-8de1-11e8-9eb6-529269fb1459'
-  //   req.body = {
-  //     roles: ['ADMIN', 'ADMIN', 'POTATO']
-  //   }
+    assert.equal(res.statusCode, 400)
+    assert.deepEqual(res._getJSONData(), {
+      message: 'Field "username" is not unique'
+    })
+  })
 
-  //   let res = httpMocks.createResponse()
+  it('setRoles', async () => {
+    const req = httpMocks.createRequest()
+    req.user = {
+      id: 'f10f7c9d-745d-4481-a86a-3dc67e186fed',
+      roles: ['USER', 'ADMIN']
+    }
+    req.params.usersId = '393967e0-8de1-11e8-9eb6-529269fb1459'
+    req.body = {
+      roles: ['ADMIN', 'ADMIN', 'POTATO']
+    }
 
-  //   const next = (err: Error) => console.log(err)
+    let res = httpMocks.createResponse()
 
-  //   await UsersController.setRoles(req, res, next)
+    const next = (err: Error) => console.log(err)
 
-  //   assert.equal(res.statusCode, 204)
+    await UsersController.setRoles(req, res, next)
 
-  //   res = httpMocks.createResponse()
-  //   await UsersController.get(req, res, next)
+    assert.equal(res.statusCode, 204)
 
-  //   assert.equal(res.statusCode, 200)
+    res = httpMocks.createResponse()
+    await UsersController.get(req, res, next)
 
-  //   assert.deepEqual(res._getJSONData(), {
-  //     message: 'User data found',
-  //     data: {
-  //       id: '393967e0-8de1-11e8-9eb6-529269fb1459',
-  //       username: 'aaaaaaa',
-  //       longName: 'some name',
-  //       isActive: true,
-  //       roles: ['ADMIN', 'POTATO', 'USER'],
-  //       locale: 'de_DE',
-  //       email: 'proper@emailexample.de'
-  //     }
-  //   })
-  // })
+    assert.equal(res.statusCode, 200)
 
-  // it('setRoles SYS error', async () => {
-  //   const req = httpMocks.createRequest()
-  //   req.user = {
-  //     id: 'f10f7c9d-745d-4481-a86a-3dc67e186fed',
-  //     roles: ['USER', 'ADMIN']
-  //   }
-  //   req.params.usersId = '393967e0-8de1-11e8-9eb6-529269fb1459'
-  //   req.body = {
-  //     roles: ['ADMIN', 'ADMIN', 'SYS']
-  //   }
+    assert.deepEqual(
+      res._getJSONData(),
+      {
+        id: '393967e0-8de1-11e8-9eb6-529269fb1459',
+        username: 'aaaaaaa',
+        name: 'some',
+        familyName: 'name',
+        isActive: true,
+        roles: ['ADMIN', 'POTATO', 'USER'],
+        locale: 'de_DE',
+        email: 'proper@emailexample.de'
+      }
+    )
+  })
 
-  //   let res = httpMocks.createResponse()
+  it('setRoles SYS error', async () => {
+    const req = httpMocks.createRequest()
+    req.user = {
+      id: 'f10f7c9d-745d-4481-a86a-3dc67e186fed',
+      roles: ['USER', 'ADMIN']
+    }
+    req.params.usersId = '393967e0-8de1-11e8-9eb6-529269fb1459'
+    req.body = {
+      roles: ['ADMIN', 'ADMIN', 'SYS']
+    }
 
-  //   const next = (err: Error) => console.log(err)
+    let res = httpMocks.createResponse()
 
-  //   await UsersController.setRoles(req, res, next)
+    const next = (err: Error) => console.log(err)
 
-  //   assert.equal(res.statusCode, 403)
-  //   assert.equal(res._getJSONData().message, `Not Allowed`)
-  // })
+    await UsersController.setRoles(req, res, next)
 
-  // it('setRoles Same user error', async () => {
-  //   const req = httpMocks.createRequest()
-  //   req.user = {
-  //     id: 'f10f7c9d-745d-4481-a86a-3dc67e186fed',
-  //     roles: ['USER', 'ADMIN']
-  //   }
-  //   req.params.usersId = 'f10f7c9d-745d-4481-a86a-3dc67e186fed'
-  //   req.body = {
-  //     roles: ['ADMIN', 'ADMIN']
-  //   }
+    assert.equal(res.statusCode, 403)
+    assert.equal(res._getJSONData().message, `Not Allowed`)
+  })
 
-  //   let res = httpMocks.createResponse()
+  it('setRoles Same user error', async () => {
+    const req = httpMocks.createRequest()
+    req.user = {
+      id: 'f10f7c9d-745d-4481-a86a-3dc67e186fed',
+      roles: ['USER', 'ADMIN']
+    }
+    req.params.usersId = 'f10f7c9d-745d-4481-a86a-3dc67e186fed'
+    req.body = {
+      roles: ['ADMIN', 'ADMIN']
+    }
 
-  //   const next = (err: Error) => console.log(err)
+    let res = httpMocks.createResponse()
 
-  //   await UsersController.setRoles(req, res, next)
+    const next = (err: Error) => console.log(err)
 
-  //   assert.equal(res.statusCode, 403)
-  //   assert.equal(res._getJSONData().message, `Not Allowed`)
-  // })
+    await UsersController.setRoles(req, res, next)
+
+    assert.equal(res.statusCode, 403)
+    assert.equal(res._getJSONData().message, `Not Allowed`)
+  })
+
+  it('password change 404', async () => {
+    const req = httpMocks.createRequest()
+    req.user = {
+      id: 'f10f7c9d-745d-4481-a86a-ssss',
+      roles: ['USER']
+    }
+    req.body = {
+      password: 'potato'
+    }
+
+    let res = httpMocks.createResponse()
+
+    const next = (err: Error) => console.log(err)
+
+    res = httpMocks.createResponse()
+    await UsersController.passwordChange(req, res, next)
+
+    assert.equal(res.statusCode, 404)
+    assert.equal(res._getJSONData().message, `User does not exists`)
+  })
+
+  it('password change 403', async () => {
+    const req = httpMocks.createRequest()
+    req.user = {
+      id: 'f10f7c9d-745d-4481-a86a-ssss',
+      roles: ['USER']
+    }
+    req.body = {
+      password: 'potato'
+    }
+
+    req.params = {
+      usersId: 'asdadadasdasd'
+    }
+
+    let res = httpMocks.createResponse()
+
+    const next = (err: Error) => console.log(err)
+
+    res = httpMocks.createResponse()
+    await UsersController.passwordChange(req, res, next)
+
+    assert.equal(res.statusCode, 403)
+    assert.equal(res._getJSONData().message, `Not Allowed`)
+  })
+
+  it('password change wrong old', async () => {
+    const req = httpMocks.createRequest()
+    req.user = {
+      id: 'f10f7c9d-745d-4481-a86a-3dc67e186fed',
+      roles: ['USER']
+    }
+    req.body = {
+      passwordOld: 'asdasd',
+      password: 'potato'
+    }
+
+    let res = httpMocks.createResponse()
+
+    const next = (err: Error) => console.log(err)
+
+    res = httpMocks.createResponse()
+    await UsersController.passwordChange(req, res, next)
+
+    assert.equal(res.statusCode, 400)
+    assert.equal(res._getJSONData().message, `Validation error`)
+  })
+
+  it('password change ok', async () => {
+    const req = httpMocks.createRequest()
+    req.user = {
+      id: 'f4a48cb8-4ee2-47d5-ab23-e6db0bf5d28b',
+      roles: ['USER']
+    }
+    req.body = {
+      passwordOld: 'pass',
+      passwordNew: 'potato'
+    }
+
+    let res = httpMocks.createResponse()
+
+    const next = (err: Error) => console.log(err)
+
+    res = httpMocks.createResponse()
+    await UsersController.passwordChange(req, res, next)
+
+    assert.equal(res.statusCode, 204)
+  })
 })

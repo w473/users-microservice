@@ -2,11 +2,7 @@ import User from '../models/UserModel';
 import config from '../../config'
 import fetch from 'node-fetch'
 
-/**
- * 
- * @param {User} user 
- * @returns {String}
- */
+
 const getActivationURL = (user: User) => {
     return config.activationURL.replace('{{activationCode}}', String(user.getCredentials().getActivationCode()));
 }

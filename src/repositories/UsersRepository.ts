@@ -8,12 +8,14 @@ class UserRepository {
     return db().collection('users')
   }
 
-  public save = (user: User): Promise<any> => {
+  public save = async (user: User): Promise<User> => {
+    let res = null;
     if (user.getDbId()) {
-      return this.collection().replace(<ObjectWithId>{ '_id': user.getDbId() }, user.serialize());
+      res = await this.collection().replace(<ObjectWithId>{ '_id': user.getDbId() }, user.serialize());
     } else {
-      return this.collection().save(user.serialize())
+      res = await this.collection().save(user.serialize())
     }
+    return user.bootExisting(res._id, res._rev, res._key)
   }
 
   public async findOneByUserId (userId: string): Promise<User | null> {

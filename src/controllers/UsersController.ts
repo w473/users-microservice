@@ -23,14 +23,13 @@ export const add = (req: Request, res: Response, next: CallableFunction) => {
       return UserRepository.save(user)
     })
     .then((user) => {
-      res.status(204).send()
-      return sendNewUser(user)
+      sendNewUser(user)
+      return res.status(204).send()
     })
     .catch((err) => {
-      if (err.code === 11000) {
-        return res.status(400).json({
-          message: `Field "${Object.keys(err.keyPattern)[0]}" is not unique`
-        })
+      if (err.name === 'ArangoError' && err.code === 409) {
+        const notUnique = err.message.includes('email') ? 'email' : 'username'
+        return res.status(400).json({ message: `Field "${notUnique}" is not unique` })
       }
       return next(err)
     })
@@ -55,12 +54,12 @@ export const edit = async (
           if (newEmail) {
             user.setActivationCode(uuidv4().toString())
           }
-          break
         default:
           const tmp = user as any
           tmp['set' + capitalize(key)](value)
       }
     }
+
     await UserRepository.save(user)
 
     if (newEmail) {
@@ -71,10 +70,9 @@ export const edit = async (
     }
     return res.status(204).send()
   } catch (err) {
-    if (err.code === 11000) {
-      return res.status(400).json({
-        message: `Field "${Object.keys(err.keyPattern)[0]}" is not unique`
-      })
+    if (err.name === 'ArangoError' && err.code === 409) {
+      const notUnique = err.message.includes('email') ? 'email' : 'username'
+      return res.status(400).json({ message: `Field "${notUnique}" is not unique` })
     }
     return next(err)
   }
@@ -162,7 +160,7 @@ export const setRoles = async (
   req.body.roles.push('USER')
   const roles = [...new Set(<Array<string>>req.body.roles)]
   try {
-    const user = await UserRepository.findOneByUserId(req.user.id)
+    const user = await UserRepository.findOneByUserId(usersId)
     if (!user) {
       return res.status(404).json({ message: `User does not exists` })
     }
