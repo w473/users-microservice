@@ -3,9 +3,9 @@ import morgan from 'morgan';
 import stringify from 'json-stringify-safe';
 import { ValidationError } from 'express-json-validator-middleware';
 import { Request, Response } from './libs/Models'
-import routes from './routes/Routes';
+import routes from './routes/UsersRoutes';
 import { logger, stream } from './services/LoggerService';
-import { dbObject } from './services/DBService';
+import db, { connect } from './services/DBService';
 import config from '../config';
 
 const app = express();
@@ -52,7 +52,7 @@ app.use((error: Error | ValidationError, _1: Request, res: Response, _2: Callabl
   return null;
 });
 
-dbObject.connect()
+connect()
   .then((_) => {
     app.listen(config.port);
   })

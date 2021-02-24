@@ -3,7 +3,7 @@ import { ObjectWithId } from 'arangojs/documents'
 import User from '../models/UserModel'
 import db from '../services/DBService'
 
-class UserRepository {
+class UsersRepository {
   collection () {
     return db().collection('users')
   }
@@ -81,7 +81,7 @@ class UserRepository {
     return false
   }
 
-  private hydrate (rawUser: any): User {
+  public hydrate (rawUser: any): User {
     const user = new User(
       rawUser.username,
       rawUser.name,
@@ -97,4 +97,4 @@ class UserRepository {
   }
 }
 
-export default new UserRepository()
+export default new UsersRepository()
