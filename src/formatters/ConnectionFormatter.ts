@@ -4,13 +4,13 @@ export const formatAll = function (connections: Array<Connection>): Array<object
     return connections.map(
         f => {
             return {
-                friend: {
+                connection: {
                     id: f.getUserTo()?.getDbId(),
                     name: f.getUserTo()?.getName(),
                     familyName: f.getUserTo()?.getFamilyName(),
-                    use: f.getUserTo()?.getUsername()
+                    username: f.getUserTo()?.getUsername()
                 },
-                created: f.created
+                created: f.getCreated().getTime()
             }
         }
     );

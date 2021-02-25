@@ -4,6 +4,7 @@ import Connection, { Type as ConnectionType } from '../models/ConnectionModel'
 import UsersRepository from './UsersRepository'
 import db from '../services/DBService'
 import { EdgeCollection } from 'arangojs/collection'
+import { GeneratedAqlQuery } from 'arangojs/aql'
 
 class ConnectionsRepository {
     collection (): EdgeCollection {
@@ -13,18 +14,39 @@ class ConnectionsRepository {
     public async findAllByUsersIdFrom (
         usersId: string,
         count: number,
-        offset: number
+        offset: number,
+        type: ConnectionType = ConnectionType.connection
     ): Promise<Array<Connection>> {
-
         const id = 'users/' + usersId;
-        const cursor = await db().query(aql`
+        return this.findAllByAqlQuery(aql`
         FOR c IN connections
         FOR user IN users
-        FILTER  c._from==${id} && user._id==c._to && c.type!='request'
+        FILTER c._from==${id} && user._id==c._to && c.type==${type}
         SORT user.familyName, user.name DESC
         LIMIT ${offset}, ${count}
         RETURN {c,user}
         `)
+    }
+
+    public async findAllByUsersIdTo (
+        usersId: string,
+        count: number,
+        offset: number,
+        type: ConnectionType = ConnectionType.connection
+    ): Promise<Array<Connection>> {
+        const id = 'users/' + usersId;
+        return this.findAllByAqlQuery(aql`
+        FOR c IN connections
+        FOR user IN users
+        FILTER c._to==${id} && user._id==c._from && c.type==${type}
+        SORT user.familyName, user.name DESC
+        LIMIT ${offset}, ${count}
+        RETURN {c,user}
+        `);
+    }
+
+    private async findAllByAqlQuery (query: GeneratedAqlQuery): Promise<Array<Connection>> {
+        const cursor = await db().query(query)
         const users = await cursor.all()
         const ret = new Array()
 
@@ -81,12 +103,11 @@ class ConnectionsRepository {
     }
 
     public hydrate (rawData: any, user: User | null = null): Connection {
-
         const connection = new Connection(
             rawData._from,
             rawData._to,
-            rawData._type,
-            new Date(rawData._created),
+            rawData.type,
+            new Date(rawData.created),
             rawData._key
         )
         connection.setUserTo(user);

@@ -1,10 +1,41 @@
 import { Request, Response } from '../libs/Models'
 import { Type as ConnectionType } from '../models/ConnectionModel';
 import ConnectionsRepository from '../repositories/ConnectionsRepository';
-import { findOne as findOneConnection } from '../repositories/FriendRepository';
-import UsersRepository from '../repositories/UsersRepository';
+import { formatAll } from '../formatters/ConnectionFormatter';
 
-//get requests both ways
+export const getIncomingRequests = async (req: Request, res: Response, next: CallableFunction) => {
+    const usersId = req.user.id
+    return ConnectionsRepository
+        .findAllByUsersIdTo(
+            usersId,
+            Number(req.query.limit ?? 10),
+            Number(req.query.offset ?? 0),
+            ConnectionType.request
+        )
+        .then(connections => {
+            return res.status(200).json({ connections: formatAll(connections) });
+        })
+        .catch(err => {
+            return next(err);
+        })
+}
+
+export const getOutgoingRequests = async (req: Request, res: Response, next: CallableFunction) => {
+    const usersId = req.user.id
+    return ConnectionsRepository
+        .findAllByUsersIdFrom(
+            usersId,
+            Number(req.query.limit ?? 10),
+            Number(req.query.offset ?? 0),
+            ConnectionType.request
+        )
+        .then(connections => {
+            return res.status(200).json({ connections: formatAll(connections) });
+        })
+        .catch(err => {
+            return next(err);
+        })
+}
 
 export const createRequests = async (req: Request, res: Response, next: CallableFunction) => {
     const usersId = req.user.id

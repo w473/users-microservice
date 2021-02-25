@@ -91,8 +91,8 @@ class UsersRepository {
     )
     user.setRoles(rawUser.roles)
     user.bootExisting(rawUser._id, rawUser._rev, rawUser._key)
-    user.setActivationCode(rawUser.credentials.activationCode)
-    user.getCredentials().setPassword(rawUser.credentials.password)
+    user.setActivationCode(rawUser.credentials?.activationCode)
+    user.getCredentials().setPassword(rawUser.credentials?.password)
     return user
   }
 }

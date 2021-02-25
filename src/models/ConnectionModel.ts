@@ -30,11 +30,15 @@ class Connection extends Edge {
     public getType (): Type {
         return this.type;
     }
+
+    public getCreated (): Date {
+        return this.created;
+    }
 }
 
 export enum Type {
-    connection,
-    request
+    connection = 'connection',
+    request = 'request'
 }
 
 export default Connection
