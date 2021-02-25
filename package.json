@@ -10,7 +10,7 @@
     "scripts": {
         "compile": "tsc --declaration",
         "test": "mocha ./src/tests/unit",
-        "test-integration": "ENV=test mocha ./src/tests/integration",
+        "test-integration": "ENV=test mocha ./src/tests/integration -g Requests",
         "lint": "tslint --project tsconfig.json",
         "start-dev": "nodemon src/index.ts",
         "start": "node index.ts"

@@ -107,12 +107,4 @@ describe('Connections', () => {
     const json = res._getData()
     assert.equal('{"message":"Connection has not been found"}', json)
   })
-
-  /*
-getIncomingRequests
-getOutgoingRequests
-createRequests
-acceptRequests
-*/
-
 })
