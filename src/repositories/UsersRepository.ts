@@ -1,19 +1,28 @@
 import { aql } from 'arangojs'
 import { ObjectWithId } from 'arangojs/documents'
+import { DBError } from '../libs/Models'
 import User from '../models/UserModel'
 import db from '../services/DBService'
 
-class UserRepository {
+class UsersRepository {
   collection () {
     return db().collection('users')
   }
 
   public save = async (user: User): Promise<User> => {
     let res = null;
-    if (user.getDbId()) {
-      res = await this.collection().replace(<ObjectWithId>{ '_id': user.getDbId() }, user.serialize());
-    } else {
-      res = await this.collection().save(user.serialize())
+    try {
+      if (user.getDbId()) {
+        res = await this.collection().replace(<ObjectWithId>{ '_id': user.getDbId() }, user.serialize());
+      } else {
+        res = await this.collection().save(user.serialize())
+      }
+    } catch (error) {
+      if (error.name === 'ArangoError' && error.code === 409) {
+        const notUnique = error.message.includes('email') ? 'email' : 'username'
+        throw new DBError(`Field "${notUnique}" is not unique`)
+      }
+      throw error
     }
     return user.bootExisting(res._id, res._rev, res._key)
   }
@@ -81,7 +90,7 @@ class UserRepository {
     return false
   }
 
-  private hydrate (rawUser: any): User {
+  public hydrate (rawUser: any): User {
     const user = new User(
       rawUser.username,
       rawUser.name,
@@ -91,10 +100,14 @@ class UserRepository {
     )
     user.setRoles(rawUser.roles)
     user.bootExisting(rawUser._id, rawUser._rev, rawUser._key)
-    user.setActivationCode(rawUser.credentials.activationCode)
-    user.getCredentials().setPassword(rawUser.credentials.password)
+    user.setActivationCode(rawUser.credentials?.activationCode)
+    user.getCredentials().setPassword(rawUser.credentials?.password)
     return user
+  }
+
+  public exists (usersId: string): Promise<boolean> {
+    return this.collection().documentExists({ '_id': 'users/' + usersId })
   }
 }
 
-export default new UserRepository()
+export default new UsersRepository()

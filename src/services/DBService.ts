@@ -2,7 +2,7 @@ import config from '../../config';
 import { Database } from 'arangojs';
 
 let _db: Database;
-const collections = ['users'];
+const collections = ['users', 'connections'];
 
 export const connect = async (): Promise<Database> => {
     const db = new Database(config.db.url);
@@ -27,11 +27,27 @@ const ensureCollections = async (_db: Database): Promise<void> => {
         return !(existingCollections.find(ec => ec.name === name))
     })
     for (const collection of missingCollections) {
-        await _db.createCollection(collection);
-        //TODO move to proper place!!
-        await _db.collection(collection).ensureIndex({ type: "persistent", fields: ["username"], unique: true });
-        await _db.collection(collection).ensureIndex({ type: "persistent", fields: ["email"], unique: true });
+        switch (collection) {
+            case 'users':
+                await createUsersCollection();
+                break;
+            case 'connections':
+                await createConnectionsCollection();
+                break;
+        }
     }
+}
+
+const createUsersCollection = async () => {
+    await _db.createCollection('users');
+    await _db.collection('users').ensureIndex({ type: "persistent", fields: ["username"], unique: true });
+    await _db.collection('users').ensureIndex({ type: "persistent", fields: ["email"], unique: true });
+}
+
+const createConnectionsCollection = async () => {
+    await _db.createEdgeCollection('connections')
+    await _db.collection('connections').ensureIndex({ type: "persistent", fields: ["_from", "_to"], unique: true });
+    await _db.collection('connections').ensureIndex({ type: "persistent", fields: ["_to", "_from"], unique: true });
 }
 
 const db = (): Database => {

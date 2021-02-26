@@ -1,78 +1,20 @@
 import httpMocks from 'node-mocks-http'
 import { assert } from 'chai'
 
-import * as UsersController from '../../controllers/UsersController'
-import db, { connect } from '../../services/DBService';
-import { aql } from 'arangojs';
+import { connect } from '../../services/DBService';
+import { usersReset } from './AbstractIntegrationTest'
 
-const stubData = [
-  {
-    _key: '393967e0-8de1-11e8-9eb6-529269fb1459',
-    username: 'aaaaaaa',
-    name: 'some',
-    familyName: 'name',
-    email: 'proper@emailexample.de',
-    locale: 'de_DE',
-    credentials: {
-      password: 'some password'
-    },
-    roles: ['USER'],
-    isActive: true
-  },
-  {
-    _key: 'f10f7c9d-745d-4481-a86a-3dc67e186fed',
-    username: 'username',
-    name: 'bla bla',
-    familyName: 'bla name',
-    email: 'sssssss@emailexample.de',
-    locale: 'pl_PL',
-    credentials: {
-      password: 'some password'
-    },
-    roles: ['USER', 'ADMIN'],
-    isActive: true
-  },
-  {
-    _key: 'f4a48cb8-4ee2-47d5-ab23-e6db0bf5d28b',
-    username: 'otherusername',
-    name: 'some',
-    familyName: 'name longer',
-    email: 'eeefffee@emailexample.de',
-    locale: 'en_US',
-    credentials: {
-      password: '$2y$12$P/cqZ.mwU/7h43r0zbdWS.hCOb1KIt188p8.MR4Rm/a/v2cVloBOC',
-      activationCode: 'c8307d28-e3a7-43c9-a4b4-3e0f0ec3d25c'
-    },
-    roles: ['USER'],
-    isActive: false
-  }
-]
+import * as UsersController from '../../controllers/UsersController'
 
 describe('Users', () => {
   before(async () => {
     return connect();
   })
   beforeEach(async () => {
-    return db()
-      .query(aql`
-        FOR user IN users
-        RETURN user`
-      )
-      .then(usersCursor => {
-        return usersCursor.all();
-      })
-      .then(users => {
-        return db().collection('users').removeAll(users);
-      })
-      .then(() => {
-        return db().collection('users').saveAll(stubData);
-      })
-      .catch((err) => {
-        console.log('ERROR 1', err)
-      })
+    await usersReset()
   })
 
-  it('2 users should be returned', async () => {
+  it('5 users should be returned', async () => {
     const req = httpMocks.createRequest()
     req.query = {
       name: 'name',
@@ -89,7 +31,7 @@ describe('Users', () => {
     await UsersController.find(req, res, next)
     assert.equal(res.statusCode, 200)
     const json = res._getJSONData()
-    assert.equal(json.users.length, 3)
+    assert.equal(json.users.length, 5)
   })
 
   it('findByEmail', async () => {
