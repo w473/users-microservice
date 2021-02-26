@@ -1,5 +1,6 @@
 import { aql } from 'arangojs'
 import { ObjectWithId } from 'arangojs/documents'
+import { DBError } from '../libs/Models'
 import User from '../models/UserModel'
 import db from '../services/DBService'
 
@@ -10,10 +11,18 @@ class UsersRepository {
 
   public save = async (user: User): Promise<User> => {
     let res = null;
-    if (user.getDbId()) {
-      res = await this.collection().replace(<ObjectWithId>{ '_id': user.getDbId() }, user.serialize());
-    } else {
-      res = await this.collection().save(user.serialize())
+    try {
+      if (user.getDbId()) {
+        res = await this.collection().replace(<ObjectWithId>{ '_id': user.getDbId() }, user.serialize());
+      } else {
+        res = await this.collection().save(user.serialize())
+      }
+    } catch (error) {
+      if (error.name === 'ArangoError' && error.code === 409) {
+        const notUnique = error.message.includes('email') ? 'email' : 'username'
+        throw new DBError(`Field "${notUnique}" is not unique`)
+      }
+      throw error
     }
     return user.bootExisting(res._id, res._rev, res._key)
   }
@@ -94,6 +103,10 @@ class UsersRepository {
     user.setActivationCode(rawUser.credentials?.activationCode)
     user.getCredentials().setPassword(rawUser.credentials?.password)
     return user
+  }
+
+  public exists (usersId: string): Promise<boolean> {
+    return this.collection().documentExists({ '_id': 'users/' + usersId })
   }
 }
 

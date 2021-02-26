@@ -6,9 +6,9 @@ class Connection extends Edge {
     private created: Date;
     private userTo!: User | null;
 
-    constructor(from: string, to: string, type: Type, created: Date, key: string | null = null) {
+    constructor(from: string, to: string, type: Type, created: Date, key: string | undefined = undefined) {
         super(from, to, key)
-        this.type = type;
+        this.type = type
         this.created = created;
     }
 

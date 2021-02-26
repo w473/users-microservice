@@ -14,7 +14,7 @@ describe('Users', () => {
     await usersReset()
   })
 
-  it('2 users should be returned', async () => {
+  it('5 users should be returned', async () => {
     const req = httpMocks.createRequest()
     req.query = {
       name: 'name',
@@ -31,7 +31,7 @@ describe('Users', () => {
     await UsersController.find(req, res, next)
     assert.equal(res.statusCode, 200)
     const json = res._getJSONData()
-    assert.equal(json.users.length, 3)
+    assert.equal(json.users.length, 5)
   })
 
   it('findByEmail', async () => {

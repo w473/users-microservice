@@ -1,7 +1,8 @@
-import { Request, Response } from '../libs/Models'
+import { Request, Response, Fault } from '../libs/Models'
 import { Type as ConnectionType } from '../models/ConnectionModel';
 import ConnectionsRepository from '../repositories/ConnectionsRepository';
 import { formatAll } from '../formatters/ConnectionFormatter';
+import UsersRepository from '../repositories/UsersRepository';
 
 export const getIncomingRequests = async (req: Request, res: Response, next: CallableFunction) => {
     const usersId = req.user.id
@@ -39,7 +40,11 @@ export const getOutgoingRequests = async (req: Request, res: Response, next: Cal
 
 export const createRequests = async (req: Request, res: Response, next: CallableFunction) => {
     const usersId = req.user.id
-    const friendId = req.params.userId;
+    const friendId = req.params.usersId;
+
+    if (!await UsersRepository.exists(friendId)) {
+        return res.status(400).json({ message: 'User does not exists' });
+    }
 
     if (usersId === friendId) {
         return res.status(400).json({ message: 'Connection can\'t be created' });
@@ -53,16 +58,19 @@ export const createRequests = async (req: Request, res: Response, next: Callable
 
         return res.status(204).send()
     } catch (err) {
+        if (err instanceof Fault) {
+            return res.status(400).json({ message: err.message });
+        }
         return next(err)
     }
 }
 
 export const acceptRequests = async (req: Request, res: Response, next: CallableFunction) => {
-    const userId = req.user.id
-    const friendId = req.params.userId;
+    const usersId = req.user.id
+    const friendId = req.params.usersId;
 
     try {
-        const connection = await ConnectionsRepository.findConnection(friendId, userId);
+        const connection = await ConnectionsRepository.findConnection(friendId, usersId);
         if (!connection) {
             return res.status(404).json({ message: 'Connection request has not been found' });
         }
@@ -72,6 +80,9 @@ export const acceptRequests = async (req: Request, res: Response, next: Callable
         await ConnectionsRepository.acceptConnection(connection);
         return res.status(204).send();
     } catch (err) {
+        if (err instanceof Fault) {
+            return res.status(400).json({ message: err.message });
+        }
         return next(err);
     }
 }

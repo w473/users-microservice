@@ -1,4 +1,4 @@
-import { Request, Response } from '../libs/Models'
+import { Request, Response, Fault } from '../libs/Models'
 import bcrypt from 'bcryptjs'
 import User from '../models/UserModel'
 import { formatOne, formatAll } from '../formatters/UsersFormatter'
@@ -27,9 +27,8 @@ export const add = (req: Request, res: Response, next: CallableFunction) => {
       return res.status(204).send()
     })
     .catch((err) => {
-      if (err.name === 'ArangoError' && err.code === 409) {
-        const notUnique = err.message.includes('email') ? 'email' : 'username'
-        return res.status(400).json({ message: `Field "${notUnique}" is not unique` })
+      if (err instanceof Fault) {
+        return res.status(400).json({ message: err.message });
       }
       return next(err)
     })
@@ -70,9 +69,8 @@ export const edit = async (
     }
     return res.status(204).send()
   } catch (err) {
-    if (err.name === 'ArangoError' && err.code === 409) {
-      const notUnique = err.message.includes('email') ? 'email' : 'username'
-      return res.status(400).json({ message: `Field "${notUnique}" is not unique` })
+    if (err instanceof Fault) {
+      return res.status(400).json({ message: err.message });
     }
     return next(err)
   }

@@ -47,6 +47,7 @@ const createUsersCollection = async () => {
 const createConnectionsCollection = async () => {
     await _db.createEdgeCollection('connections')
     await _db.collection('connections').ensureIndex({ type: "persistent", fields: ["_from", "_to"], unique: true });
+    await _db.collection('connections').ensureIndex({ type: "persistent", fields: ["_to", "_from"], unique: true });
 }
 
 const db = (): Database => {

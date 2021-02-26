@@ -44,6 +44,32 @@ const stubData = {
             },
             roles: ['USER'],
             isActive: false
+        },
+        {
+            _key: 'b25491a7-2f80-47fb-b5c0-96fae87122f9',
+            username: 'kopytko',
+            name: 'ddddd',
+            familyName: 'fnamer',
+            email: 'eeefffee@sssss.de',
+            locale: 'en_US',
+            credentials: {
+                password: '$2y$12$P/cqZ.mwU/7h43r0zbdWS.hCOb1KIt188p8.MR4Rm/a/v2cVloBOC'
+            },
+            roles: ['USER'],
+            isActive: true
+        },
+        {
+            _key: '9a73fa8f-b84c-4925-906b-96012b0c4be1',
+            username: 'random',
+            name: 'asasdf',
+            familyName: 'fnameasdasdr',
+            email: 'eeefffee@sss.de',
+            locale: 'en_US',
+            credentials: {
+                password: '$2y$12$P/cqZ.mwU/7h43r0zbdWS.hCOb1KIt188p8.MR4Rm/a/v2cVloBOC'
+            },
+            roles: ['USER'],
+            isActive: true
         }
     ],
     connections: [
@@ -54,8 +80,8 @@ const stubData = {
             created: 1614113070000,
         },
         {
-            _from: 'users/f10f7c9d-745d-4481-a86a-3dc67e186fed',
-            _to: 'users/f4a48cb8-4ee2-47d5-ab23-e6db0bf5d28b',
+            _from: 'users/393967e0-8de1-11e8-9eb6-529269fb1459',
+            _to: 'users/b25491a7-2f80-47fb-b5c0-96fae87122f9',
             type: ConnectionType.request,
             created: 1614113070000,
         },

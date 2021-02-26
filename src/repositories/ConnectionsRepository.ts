@@ -5,6 +5,7 @@ import UsersRepository from './UsersRepository'
 import db from '../services/DBService'
 import { EdgeCollection } from 'arangojs/collection'
 import { GeneratedAqlQuery } from 'arangojs/aql'
+import { DBError } from '../libs/Models'
 
 class ConnectionsRepository {
     collection (): EdgeCollection {
@@ -79,11 +80,27 @@ class ConnectionsRepository {
         usersIdSecond: string,
         connectionType: ConnectionType = ConnectionType.request
     ): Promise<any> {
-        const connection = new Connection('users/' + usersIdFirst, 'users/' + usersIdSecond, connectionType, new Date());
-        return this.collection().save(connection);
+        usersIdFirst = 'users/' + usersIdFirst.replace('users/', '');
+        usersIdSecond = 'users/' + usersIdSecond.replace('users/', '');
+        this.collection().documentExists
+        const connection = new Connection(
+            usersIdFirst,
+            usersIdSecond,
+            connectionType,
+            new Date()
+        );
+        return this.collection().save(connection.serialize())
+            .catch(error => {
+                if (error.name === 'ArangoError' && error.message === 'illegal document key') {
+                    throw new DBError('Wrong Users Id')
+                }
+                throw error
+            });
     }
 
     public async findConnection (usersIdFrom: string, usersIdTo: string): Promise<Connection | null> {
+        usersIdFrom = 'users/' + usersIdFrom;
+        usersIdTo = 'users/' + usersIdTo;
         const cursor = await db().query(aql`
         FOR c IN connections
         FILTER  c._from==${usersIdFrom} && c._to==${usersIdTo}

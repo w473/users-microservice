@@ -1,20 +1,23 @@
 export default abstract class Edge {
   protected _from: string
   protected _to: string
-  protected _key!: string | null
+  protected _key!: string | undefined
 
-  constructor(from: string, to: string, key: string | null = null) {
+  constructor(from: string, to: string, key: string | undefined = undefined) {
     this._from = from;
     this._to = to;
     this._key = key;
   }
 
   public serialize (): object {
-    return {
+    const ret: any = {
       _from: this._from,
-      _to: this._to,
-      _key: this._key
+      _to: this._to
     }
+    if (this._key) {
+      ret._key = this._key
+    }
+    return ret
   }
 
   public getFrom (): string {
@@ -25,7 +28,7 @@ export default abstract class Edge {
     return this._to;
   }
 
-  public getKey (): string | null {
+  public getKey (): string | undefined {
     return this._key;
   }
 }
