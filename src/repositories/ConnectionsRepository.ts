@@ -75,6 +75,20 @@ class ConnectionsRepository {
         return this.collection().removeAll(keys);
     }
 
+    public async removeAllConnections (usersId: string): Promise<any> {
+        usersId = 'users/' + usersId;
+        const cursor = await db().query(aql`
+        FOR c IN connections
+        FILTER  (c._from==${usersId} || c._from==${usersId})
+        RETURN c._key
+        `)
+        const keys = await cursor.all();
+        if (keys.length > 0) {
+            return this.collection().removeAll(keys);
+        }
+        return null;
+    }
+
     public async createConnection (
         usersIdFirst: string,
         usersIdSecond: string,

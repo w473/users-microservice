@@ -6,6 +6,7 @@ import { sendNewUser, sendNewEmail } from '../services/EmailService'
 import { v4 as uuidv4 } from 'uuid'
 import UserRepository from '../repositories/UsersRepository'
 import { capitalize } from '../libs/Libs';
+import ConnectionsRepository from '../repositories/ConnectionsRepository'
 
 export const add = (req: Request, res: Response, next: CallableFunction) => {
   return bcrypt
@@ -136,11 +137,14 @@ export const deleteUser = async (
     if (!user) {
       return res.status(404).json({ message: `User does not exists` })
     }
-    const isDeleted = await UserRepository.delete(user)
-    if (isDeleted) {
-      return res.status(204).send()
-    }
-    return res.status(404).json({ message: `User has not been found` })
+    return Promise
+      .all([
+        UserRepository.delete(user),
+        ConnectionsRepository.removeAllConnections(usersId)
+      ])
+      .then(() => {
+        return res.status(204).send()
+      })
   } catch (error) {
     return next(error)
   }
