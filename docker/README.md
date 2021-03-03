@@ -6,6 +6,7 @@ https://hub.docker.com/_/node
 
 docker-run.sh LOCAL_PORT_NUMBER
 
-## build
+## build - run commands from main dir
 
-docker build -t users-ms:0.0.1 .
+docker build -t users-ms:0.0.1 -f ./docker/Dockerfile .
+docker tag users-ms:0.0.1 users-ms:latest
