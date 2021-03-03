@@ -5,8 +5,8 @@ import { ValidationError } from 'express-json-validator-middleware';
 import { Request, Response } from './libs/Models'
 import routes from './routes/UsersRoutes';
 import { logger, stream } from './services/LoggerService';
-import db, { connect } from './services/DBService';
-import config from '../config';
+import { connect } from './services/DBService';
+import config from './config';
 
 const app = express();
 

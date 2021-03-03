@@ -1,4 +1,4 @@
-import config from '../../config';
+import config from '../config';
 import { Database } from 'arangojs';
 
 let _db: Database;

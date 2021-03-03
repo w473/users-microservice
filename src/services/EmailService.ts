@@ -1,5 +1,5 @@
 import User from '../models/UserModel';
-import config from '../../config'
+import config from '../config'
 import fetch from 'node-fetch'
 
 
@@ -80,7 +80,7 @@ const post = (url: string, data: object, token: String | null = null) => {
 }
 
 const getSysToken = (): Promise<String> => {
-    //moze caching?
+    //TODO CACHING
     const url = config.sso + '/auth/sysLogin';
     return post(url, config.sysAuth)
         .then((response: any) => {

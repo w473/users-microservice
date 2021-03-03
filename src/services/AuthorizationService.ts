@@ -1,14 +1,15 @@
 import { Request, Response } from '../libs/Models'
 import { SigningKey, TokenHeader } from 'jwks-rsa';
 import { User } from '../libs/Models';
-import config from '../../config';
+import config from '../config';
 
 const jwksClient = require('jwks-rsa');
 const jwt = require('jsonwebtoken');
 const client = jwksClient({
-  strictSsl: config.auth.jwks.ssl,
-  jwksUri: config.auth.jwks.uri
+  strictSsl: config.sso.startsWith('https'),
+  jwksUri: config.sso + '/.well-known/jwks.json'
 });
+const algorithm = 'RS512';
 
 function getKey (next: CallableFunction) {
   return (header: TokenHeader, callback: CallableFunction) => {
@@ -40,7 +41,7 @@ export const jwtVerifyMiddleware = (
         return jwt.verify(
           token,
           getKey(next),
-          { algorithm: config.auth.jwt.algorithm },
+          { algorithm: algorithm },
           (err: Error, token: User) => {
             if (err) {
               return next(err);

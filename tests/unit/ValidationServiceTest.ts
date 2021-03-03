@@ -1,4 +1,4 @@
-import validate from '../../services/ValidationService';
+import validate from '../../src/services/ValidationService';
 import httpMocks from 'node-mocks-http';
 
 import { assert } from 'chai';

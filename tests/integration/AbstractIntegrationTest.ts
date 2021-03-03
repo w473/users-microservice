@@ -1,6 +1,6 @@
 
-import { Type as ConnectionType } from '../../models/ConnectionModel'
-import db from '../../services/DBService';
+import { Type as ConnectionType } from '../../src/models/ConnectionModel'
+import db from '../../src/services/DBService';
 import { aql } from 'arangojs';
 
 const stubData = {

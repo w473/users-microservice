@@ -1,4 +1,4 @@
-import * as service from '../../services/AuthorizationService';
+import * as service from '../../src/services/AuthorizationService';
 import httpMocks from 'node-mocks-http';
 import { expect } from 'chai';
 import jwt from 'jsonwebtoken';
