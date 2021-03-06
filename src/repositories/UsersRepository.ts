@@ -5,17 +5,17 @@ import User from '../models/UserModel'
 import db from '../services/DBService'
 
 class UsersRepository {
-  collection () {
-    return db().collection('users')
+  async collection () {
+    return (await db()).collection('users')
   }
 
   public save = async (user: User): Promise<User> => {
     let res = null;
     try {
       if (user.getDbId()) {
-        res = await this.collection().replace(<ObjectWithId>{ '_id': user.getDbId() }, user.serialize());
+        res = await (await this.collection()).replace(<ObjectWithId>{ '_id': user.getDbId() }, user.serialize());
       } else {
-        res = await this.collection().save(user.serialize())
+        res = await (await this.collection()).save(user.serialize())
       }
     } catch (error) {
       if (error.name === 'ArangoError' && error.code === 409) {
@@ -42,7 +42,7 @@ class UsersRepository {
     FOR user IN users
     FILTER ${aql.join(filter)}
     RETURN user`;
-    const cursor = await db().query(tmp)
+    const cursor = await (await db()).query(tmp)
     const rawUser = await cursor.next()
 
     if (!rawUser) {
@@ -64,7 +64,7 @@ class UsersRepository {
         filter.push(`user.${key}=="${value}"`)
       }
     }
-    const cursor = await db().query(aql`
+    const cursor = await (await db()).query(aql`
     FOR user IN users
     FILTER ${filter.join(' && ')}
     SORT user.familyName, user.name DESC
@@ -81,7 +81,7 @@ class UsersRepository {
   }
 
   public async delete (user: User): Promise<boolean> {
-    const metadata = await this.collection().remove({
+    const metadata = await (await this.collection()).remove({
       _id: user.getDbId()
     } as ObjectWithId)
     if (metadata._key) {
@@ -105,8 +105,8 @@ class UsersRepository {
     return user
   }
 
-  public exists (usersId: string): Promise<boolean> {
-    return this.collection().documentExists({ '_id': 'users/' + usersId })
+  public async exists (usersId: string): Promise<boolean> {
+    return (await this.collection()).documentExists({ '_id': 'users/' + usersId })
   }
 }
 
