@@ -8,20 +8,23 @@
         "url": "git+https://github.com/w473/users-microservice.git"
     },
     "scripts": {
-        "compile": "tsc --declaration",
-        "test": "mocha ./src/tests/unit",
-        "test-integration": "ENV=test mocha ./src/tests/integration",
+        "build": "rimraf ./build && tsc --declaration",
+        "test": "mocha ./tests/unit",
+        "test-integration": "ENV=test mocha ./tests/integration",
         "lint": "tslint --project tsconfig.json",
         "start-dev": "nodemon src/index.ts",
-        "start": "node index.ts"
+        "start": "node build/index.js"
     },
     "author": "Jacek Głogosz",
     "license": "Apache-2.0",
     "dependencies": {
+        "@pskzcompany/winston-graylog": "^1.0.1",
         "ajv-formats": "^1.5.1",
         "arangojs": "^7.2.0",
         "bcryptjs": "^2.4.3",
+        "dotenv": "^8.2.0",
         "express": "^4.17.1",
+        "express-http-context": "^1.2.4",
         "express-json-validator-middleware": "git+https://github.com/w473/express-json-validator-middleware.git",
         "json-stringify-safe": "^5.0.1",
         "jsonwebtoken": "^8.5.1",
@@ -31,8 +34,7 @@
         "swagger-ui-express": "^4.1.6",
         "typescript": "^4.1.4",
         "uuid": "^8.3.2",
-        "winston": "^3.3.3",
-        "winston-graylog2": "^2.1.2"
+        "winston": "^3.3.3"
     },
     "devDependencies": {
         "@types/bcryptjs": "^2.4.2",
@@ -51,6 +53,7 @@
         "mocha": "^8.2.1",
         "node-mocks-http": "^1.10.0",
         "nodemon": "^2.0.6",
+        "rimraf": "^3.0.2",
         "sinon": "^9.2.3",
         "ts-node": "^9.1.1"
     }

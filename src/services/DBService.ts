@@ -1,57 +1,81 @@
-import config from '../../config';
+import config from '../config';
 import { Database } from 'arangojs';
 
-let _db: Database;
-const collections = ['users', 'connections'];
+class DBService {
+    private dbMain !: Database;
+    private db !: Database;
 
-export const connect = async (): Promise<Database> => {
-    const db = new Database(config.db.url);
-    db.useBasicAuth(config.db.login, config.db.password)
-    _db = await ensureDB(db)
-    ensureCollections(_db);
-    return _db;
-}
+    private collections = ['users', 'connections'];
 
-const ensureDB = async (_db: Database): Promise<Database> => {
-    const dbs = await _db.listDatabases()
-    if (!dbs.includes(config.db.name)) {
-        return _db.createDatabase(config.db.name)
+    private async getDBMain (): Promise<Database> {
+        //TO DO here should be as well reconnect code
+        if (!this.dbMain) {
+            this.dbMain = new Database(config.db.url);
+            return this.dbMain.useBasicAuth(config.db.login, config.db.password)
+        }
+        return this.dbMain;
     }
-    return _db.database(config.db.name)
 
-}
+    public async getDB (): Promise<Database> {
+        //TO DO here should be as well reconnect code
+        if (this.db) {
+            return this.db;
+        }
+        if (!this.dbMain) {
+            await this.getDBMain()
+        }
+        this.db = this.dbMain.database(config.db.name)
+        return this.db
+    }
 
-const ensureCollections = async (_db: Database): Promise<void> => {
-    const existingCollections = await _db.listCollections()
-    const missingCollections = collections.filter(name => {
-        return !(existingCollections.find(ec => ec.name === name))
-    })
-    for (const collection of missingCollections) {
-        switch (collection) {
-            case 'users':
-                await createUsersCollection();
-                break;
-            case 'connections':
-                await createConnectionsCollection();
-                break;
+    public async ensureSystem (): Promise<void> {
+        const dbMain = await this.getDBMain();
+        const dbs = await dbMain.listDatabases()
+        if (!dbs.includes(config.db.name)) {
+            this.db = await dbMain.createDatabase(config.db.name)
+        }
+        await this.ensureCollections()
+    }
+
+    private async ensureCollections (): Promise<void> {
+        const db = await this.getDB()
+        const existingCollections = await db.listCollections()
+        const missingCollections = this.collections.filter(name => {
+            return !(existingCollections.find(ec => ec.name === name))
+        })
+        for (const collection of missingCollections) {
+            switch (collection) {
+                case 'users':
+                    await this.createUsersCollection();
+                    break;
+                case 'connections':
+                    await this.createConnectionsCollection();
+                    break;
+            }
         }
     }
+
+    private async createUsersCollection () {
+        const db = await this.getDB();
+        await db.createCollection('users');
+        await db.collection('users').ensureIndex({ type: "persistent", fields: ["username"], unique: true });
+        await db.collection('users').ensureIndex({ type: "persistent", fields: ["email"], unique: true });
+    }
+
+    private async createConnectionsCollection () {
+        const db = await this.getDB();
+        await db.createEdgeCollection('connections')
+        await db.collection('connections').ensureIndex({ type: "persistent", fields: ["_from", "_to"], unique: true });
+        await db.collection('connections').ensureIndex({ type: "persistent", fields: ["_to", "_from"], unique: true });
+    }
 }
 
-const createUsersCollection = async () => {
-    await _db.createCollection('users');
-    await _db.collection('users').ensureIndex({ type: "persistent", fields: ["username"], unique: true });
-    await _db.collection('users').ensureIndex({ type: "persistent", fields: ["email"], unique: true });
+export let dbService: DBService;
+const getConnection = async (): Promise<Database> => {
+    if (!dbService) {
+        dbService = new DBService()
+    }
+    return await dbService.getDB();
 }
 
-const createConnectionsCollection = async () => {
-    await _db.createEdgeCollection('connections')
-    await _db.collection('connections').ensureIndex({ type: "persistent", fields: ["_from", "_to"], unique: true });
-    await _db.collection('connections').ensureIndex({ type: "persistent", fields: ["_to", "_from"], unique: true });
-}
-
-const db = (): Database => {
-    return _db;
-}
-
-export default db;
+export default getConnection;

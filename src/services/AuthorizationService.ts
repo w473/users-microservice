@@ -1,22 +1,23 @@
 import { Request, Response } from '../libs/Models'
-import { SigningKey, TokenHeader } from 'jwks-rsa';
+import JwksClient, { SigningKey } from 'jwks-rsa';
 import { User } from '../libs/Models';
-import config from '../../config';
+import config from '../config';
+import jwt, { JwtHeader, VerifyErrors } from 'jsonwebtoken'
 
-const jwksClient = require('jwks-rsa');
-const jwt = require('jsonwebtoken');
-const client = jwksClient({
-  strictSsl: config.auth.jwks.ssl,
-  jwksUri: config.auth.jwks.uri
+const client = JwksClient({
+  strictSsl: config.sso.startsWith('https'),
+  jwksUri: config.sso + '/.well-known/jwks.json'
 });
+const algorithm = 'RS512';
 
 function getKey (next: CallableFunction) {
-  return (header: TokenHeader, callback: CallableFunction) => {
-    client.getSigningKey(header.kid, function (err: Error, key: SigningKey) {
+  return (header: JwtHeader, callback: CallableFunction) => {
+    client.getSigningKey(String(header.kid), function (err: Error | null, key: SigningKey): void {
       if (key) {
-        return callback(err, key.getPublicKey());
+        callback(err, key.getPublicKey());
+      } else {
+        next(err);
       }
-      next(err);
     });
   };
 }
@@ -26,7 +27,10 @@ export const jwtVerifyMiddleware = (
   res: Response,
   next: CallableFunction
 ) => {
-  if (req.url.indexOf('/api-docs') === 0) {
+  //TODO find better way to handle this stuff
+  if (req.url.indexOf('/api-docs') === 0
+    || (req.method == 'PATCH' && req.url.indexOf('/activate') === 0)
+    || (req.method == 'POST' && req.url === '/')) {
     return next();
   }
   if (req.method === 'OPTIONS') {
@@ -40,12 +44,12 @@ export const jwtVerifyMiddleware = (
         return jwt.verify(
           token,
           getKey(next),
-          { algorithm: config.auth.jwt.algorithm },
-          (err: Error, token: User) => {
+          { algorithms: [algorithm] },
+          (err: VerifyErrors | null, decoded: object | undefined) => {
             if (err) {
               return next(err);
             }
-            req.user = token;
+            req.user = <User>decoded;
             next();
           }
         );

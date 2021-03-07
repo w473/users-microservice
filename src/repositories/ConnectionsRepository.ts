@@ -8,8 +8,8 @@ import { GeneratedAqlQuery } from 'arangojs/aql'
 import { DBError } from '../libs/Models'
 
 class ConnectionsRepository {
-    collection (): EdgeCollection {
-        return db().collection('connections')
+    async collection (): Promise<EdgeCollection> {
+        return (await db()).collection('connections')
     }
 
     public async findAllByUsersIdFrom (
@@ -47,7 +47,7 @@ class ConnectionsRepository {
     }
 
     private async findAllByAqlQuery (query: GeneratedAqlQuery): Promise<Array<Connection>> {
-        const cursor = await db().query(query)
+        const cursor = await (await db()).query(query)
         const users = await cursor.all()
         const ret = new Array()
 
@@ -62,7 +62,7 @@ class ConnectionsRepository {
     public async findKeysByUsersIds (usersIdFirst: string, usersIdSecond: string): Promise<Array<string>> {
         const fId = 'users/' + usersIdFirst;
         const sId = 'users/' + usersIdSecond;
-        const cursor = await db().query(aql`
+        const cursor = await (await db()).query(aql`
         FOR c IN connections
         FILTER  (c._from==${fId} && c._to==${sId}) || (c._to==${fId} && c._from==${sId})
         RETURN c._key
@@ -72,19 +72,19 @@ class ConnectionsRepository {
 
     public async removeConnection (usersIdFirst: string, usersIdSecond: string): Promise<any> {
         const keys = await this.findKeysByUsersIds(usersIdFirst, usersIdSecond)
-        return this.collection().removeAll(keys);
+        return (await this.collection()).removeAll(keys);
     }
 
     public async removeAllConnections (usersId: string): Promise<any> {
         usersId = 'users/' + usersId;
-        const cursor = await db().query(aql`
+        const cursor = await (await db()).query(aql`
         FOR c IN connections
         FILTER  (c._from==${usersId} || c._from==${usersId})
         RETURN c._key
         `)
         const keys = await cursor.all();
         if (keys.length > 0) {
-            return this.collection().removeAll(keys);
+            return (await this.collection()).removeAll(keys);
         }
         return null;
     }
@@ -96,14 +96,15 @@ class ConnectionsRepository {
     ): Promise<any> {
         usersIdFirst = 'users/' + usersIdFirst.replace('users/', '');
         usersIdSecond = 'users/' + usersIdSecond.replace('users/', '');
-        this.collection().documentExists
+        (await this.collection()).documentExists
         const connection = new Connection(
             usersIdFirst,
             usersIdSecond,
             connectionType,
             new Date()
         );
-        return this.collection().save(connection.serialize())
+        return (await this.collection())
+            .save(connection.serialize())
             .catch(error => {
                 if (error.name === 'ArangoError' && error.message === 'illegal document key') {
                     throw new DBError('Wrong Users Id')
@@ -115,7 +116,7 @@ class ConnectionsRepository {
     public async findConnection (usersIdFrom: string, usersIdTo: string): Promise<Connection | null> {
         usersIdFrom = 'users/' + usersIdFrom;
         usersIdTo = 'users/' + usersIdTo;
-        const cursor = await db().query(aql`
+        const cursor = await (await db()).query(aql`
         FOR c IN connections
         FILTER  c._from==${usersIdFrom} && c._to==${usersIdTo}
         RETURN c
@@ -128,7 +129,7 @@ class ConnectionsRepository {
         return Promise.all(
             [
                 this.createConnection(connection.getTo(), connection.getFrom(), ConnectionType.connection),
-                this.collection().update({ _key: <string>connection.getKey() }, { type: ConnectionType.connection })
+                (await this.collection()).update({ _key: <string>connection.getKey() }, { type: ConnectionType.connection })
             ]
         )
     }

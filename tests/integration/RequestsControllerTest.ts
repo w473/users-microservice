@@ -1,11 +1,11 @@
 import httpMocks from 'node-mocks-http'
 import { assert } from 'chai'
 
-import { connect } from '../../services/DBService';
+import { connect } from '../../src/services/DBService';
 
 import { usersReset, connectionsReset } from './AbstractIntegrationTest'
-import * as RequestsController from '../../controllers/RequestsController'
-import ConnectionsRepository from '../../repositories/ConnectionsRepository';
+import * as RequestsController from '../../src/controllers/RequestsController'
+import ConnectionsRepository from '../../src/repositories/ConnectionsRepository';
 
 describe('Requests', () => {
   before(async () => {
