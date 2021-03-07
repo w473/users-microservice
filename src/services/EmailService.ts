@@ -1,7 +1,7 @@
 import User from '../models/UserModel';
 import config from '../config'
 import fetch from 'node-fetch'
-
+import { getHeaders } from '../middlewares/TracingHeaderPropagation'
 
 const getActivationURL = (user: User) => {
     return config.activationURL.replace('{{activationCode}}', String(user.getCredentials().getActivationCode()));
@@ -62,11 +62,11 @@ const sendEmail = (templateName: String, user: User, variables: object) => {
 
 const post = (url: string, data: object, token: String | null = null) => {
 
-    const headers: any = {
-        'Content-Type': 'application/json'
-    };
+    const headers = getHeaders();
+    headers.set('Content-Type', 'application/json');
+
     if (token) {
-        headers['Authorization'] = 'Bearer ' + token;
+        headers.set('Authorization', 'Bearer ' + token);
     }
 
     return fetch(

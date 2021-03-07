@@ -1,3 +1,4 @@
+import httpContext from 'express-http-context'
 import express from 'express';
 import morgan from 'morgan';
 import stringify from 'json-stringify-safe';
@@ -6,14 +7,18 @@ import { Request, Response } from './libs/Models'
 import routes from './routes/UsersRoutes';
 import { logger, stream } from './services/LoggerService';
 import { jwtVerifyMiddleware } from './services/AuthorizationService'
-
 import config from './config';
+import { headerPropagator } from './middlewares/TracingHeaderPropagation'
 
 const app = express();
+
+app.use(httpContext.middleware);
 
 app.use(morgan('combined', { stream: stream }));
 
 app.use(express.json());
+
+app.use(headerPropagator);
 
 app.use((_, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
