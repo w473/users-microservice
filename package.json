@@ -52,7 +52,7 @@
         "chai": "^4.2.0",
         "mocha": "^8.2.1",
         "node-mocks-http": "^1.10.0",
-        "nodemon": "^2.0.6",
+        "nodemon": "^2.0.20",
         "rimraf": "^3.0.2",
         "sinon": "^9.2.3",
         "ts-node": "^9.1.1"
